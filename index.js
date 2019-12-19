@@ -39,6 +39,7 @@ This is required for use with \`npr\``
      * Fresh installation
      */
     if (!fs.existsSync(path.join(targetDir, 'package.json'))) {
+      console.log(green(`npr: first time npm install`))
       this.writePackageAndInstall(pkg, targetDir)
     } else {
       /**
@@ -50,6 +51,9 @@ This is required for use with \`npr\``
       const existingPkg = JSON.parse(packageJSON)
       const changed = haveDependenciesChanged(pkg, existingPkg)
       if (changed) {
+        console.log(
+          green(`npr: binDependencies changed => npm installs`)
+        )
         this.writePackageAndInstall(pkg, targetDir)
       }
     }
@@ -126,4 +130,8 @@ function printHelp () {
   console.log('It will use the version of the module listed')
   console.log('in binDependencies to run the package binary.')
   process.exit(0)
+}
+
+function green (text) {
+  return '\u001b[32m' + text + '\u001b[39m'
 }
