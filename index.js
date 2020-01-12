@@ -61,6 +61,14 @@ This is required for use with \`npr\``
     const command = argv[0]
     const args = argv.slice(1)
 
+    if (command === 'which') {
+      const binary = path.join(
+        targetDir, 'node_modules', '.bin', argv[1]
+      )
+      console.log(binary)
+      process.exit(0)
+    }
+
     const binary = path.join(
       targetDir, 'node_modules', '.bin', command
     )

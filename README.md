@@ -214,6 +214,21 @@ location instead of in your current working directory.
 `npr tslint` then just resolves to
 `~/.config/npm-bin-deps/${package.name}/node_modules/.bin/tslint`
 
+### Docs `npr which {module}`
+
+If you want to find the executable name you can run `npr which testcafe`
+for example and it will return the location of the binary.
+
+This is useful if you need to cd for some reason
+
+```json
+{
+  "scripts: {
+    "testcafe": "export TESTCAFE=npr which testcafe; cd ./tests/testcafe; $TESTCAFE *.ts"
+  }
+}
+```
+
 ## install
 
 ```
