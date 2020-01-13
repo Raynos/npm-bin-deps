@@ -7,6 +7,8 @@ const os = require('os')
 const path = require('path')
 const fs = require('fs')
 
+const mkdirp = require('./mkdirp.js').sync
+
 class NpmBinDeps {
   constructor () {
     this.argv = process.argv.slice(2)
@@ -33,7 +35,7 @@ This is required for use with \`npr\``
     const targetDir = path.join(
       os.homedir(), '.config', 'npm-bin-deps', pkg.name
     )
-    execSync(`mkdir -p ${targetDir}`)
+    mkdirp(targetDir)
 
     /**
      * Fresh installation

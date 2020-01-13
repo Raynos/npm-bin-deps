@@ -4,7 +4,8 @@
   "description": "run cli dev deps with npr",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "vendor": "cp node_modules/mkdirp/index.js ./mkdirp.js; sed -i '1s;^;// Copied from mkdirp@0.5.1.\\n;' mkdirp.js"
   },
   "bin": {
     "npr": "index.js",
@@ -12,5 +13,8 @@
   },
   "author": "Raynos",
   "license": "MIT",
-  "dependencies": {}
+  "dependencies": {},
+  "devDependencies": {
+    "mkdirp": "0.5.1"
+  }
 }
