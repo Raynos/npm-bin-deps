@@ -71,9 +71,12 @@ This is required for use with \`npr\``
       process.exit(0)
     }
 
-    const binary = path.join(
+    let binary = path.join(
       targetDir, 'node_modules', '.bin', command
     )
+    if (process.platform === 'win32') {
+      binary += '.cmd'
+    }
     const proc = spawn(binary, args, {
       cwd: process.cwd(),
       stdio: 'inherit'
