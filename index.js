@@ -25,10 +25,9 @@ class NpmBinDeps {
     )
     const pkg = JSON.parse(packageJSON)
     if (!pkg.binDependencies) {
-      console.error(`
-The "binDependencies" fields is missing from package.json.
-This is required for use with \`npr\``
-      )
+      console.error('The "binDependencies" fields is missing '+
+        'from package.json.')
+      console.error('This is required for use with `npr`')
       return process.exit(1)
     }
 
