@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 'use strict'
 
-const execSync = require('child_process').execSync
 const spawn = require('child_process').spawn
 const os = require('os')
 const path = require('path')
@@ -36,12 +35,16 @@ class NpmBinDeps {
     )
     mkdirp(targetDir)
 
+    const command = argv[0]
+    const args = argv.slice(1)
+
     /**
      * Fresh installation
      */
     if (!fs.existsSync(path.join(targetDir, 'package.json'))) {
       console.log(green(`npr: first time npm install`))
-      this.writePackageAndInstall(pkg, targetDir)
+      await this.writePackageAndInstall(pkg, targetDir)
+      console.log(green(`npr: install finished, running ${command}`))
     } else {
       /**
        * Check to see if deps changed.
@@ -55,12 +58,10 @@ class NpmBinDeps {
         console.log(
           green(`npr: binDependencies changed => npm installs`)
         )
-        this.writePackageAndInstall(pkg, targetDir)
+        await this.writePackageAndInstall(pkg, targetDir)
+        console.log(green(`npr: install finished, running ${command}`))
       }
     }
-
-    const command = argv[0]
-    const args = argv.slice(1)
 
     if (command === 'which') {
       const binary = path.join(
@@ -87,19 +88,52 @@ class NpmBinDeps {
   }
 
   writePackageAndInstall (pkg, targetDir) {
-    const pkgCopy = { ...pkg }
-    pkgCopy.dependencies = pkgCopy.binDependencies
-    pkgCopy.devDependencies = {}
-    pkgCopy.peerDependencies = {}
-    pkgCopy.scripts = {}
+    return new Promise((resolve) => {
+      const pkgCopy = { ...pkg }
+      pkgCopy.dependencies = pkgCopy.binDependencies
+      pkgCopy.devDependencies = {}
+      pkgCopy.peerDependencies = {}
+      pkgCopy.scripts = {}
 
-    fs.writeFileSync(
-      path.join(targetDir, 'package.json'),
-      JSON.stringify(pkgCopy, null, 2),
-      'utf8'
-    )
-    execSync(`npm install --loglevel notice`, {
-      cwd: targetDir
+      fs.writeFileSync(
+        path.join(targetDir, 'package.json'),
+        JSON.stringify(pkgCopy, null, 2),
+        'utf8'
+      )
+      const npmProc = spawn(
+        'npm',
+        ['install', '--loglevel', 'http'],
+        {
+          cwd: targetDir
+        }
+      )
+
+      npmProc.stdout.on('data', (buf) => {
+        const lines = buf.toString('utf8').trim().split('\n')
+        for (const l of lines) {
+          if (l === '') {
+            console.log('')
+            continue
+          }
+          console.log(green(`npm install STDOUT: `) + l)
+        }
+      })
+      npmProc.stderr.on('data', (buf) => {
+        const lines = buf.toString('utf8').trim().split('\n')
+        for (const l of lines) {
+          if (l === '') {
+            console.error('')
+            continue
+          }
+          console.error(green(`npm install STDERR: `) + l)
+        }
+      })
+      npmProc.on('close', (code) => {
+        if (code !== 0) {
+          console.log(green(`npm install exited non-zero ${code}`))
+        }
+        resolve()
+      })
     })
   }
 }
