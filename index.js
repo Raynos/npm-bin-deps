@@ -141,6 +141,7 @@ class NpmBinDeps {
       npmProc.on('close', (code) => {
         if (code !== 0) {
           console.log(green(`npm install exited non-zero ${code}`))
+          fs.unlinkSync(path.join(targetDir, 'package.json'))
         }
         resolve()
       })
