@@ -37,14 +37,28 @@ class NpmBinDeps {
       return this.cacheClean()
     }
 
-    const packageJSON = fs.readFileSync(
-      path.join(process.cwd(), 'package.json'), 'utf8'
-    )
-    const pkg = JSON.parse(packageJSON)
+    const packageJSONFile = path.join(process.cwd(), 'package.json')
+    let pkg
+    try {
+      const packageJSON = fs.readFileSync(
+        packageJSONFile, 'utf8'
+      )
+      pkg = JSON.parse(packageJSON)
+    } catch (err) {
+      console.error(green(
+        'npr: Could not ready your application package.json'
+      ))
+      console.error(green(
+        `npr: Expected valid package.json at ${packageJSONFile}`
+      ))
+      throw err
+    }
     if (!pkg.binDependencies) {
-      console.error('The "binDependencies" fields is missing ' +
-        'from package.json.')
-      console.error('This is required for use with `npr`')
+      console.error(green(
+        'npr: The "binDependencies" fields is missing ' +
+        'from package.json.'
+      ))
+      console.error(green('npr: This is required for use with `npr`'))
       return process.exit(1)
     }
 
@@ -62,7 +76,14 @@ class NpmBinDeps {
         wait: 1 * MINUTE,
         pollPeriod: 500,
         stale: 5 * MINUTE
-      }, cb)
+      }, (err) => {
+        if (err) {
+          console.error(green(
+            'npr: Could not acquire lock for concurrent NPR'
+          ))
+        }
+        cb(err)
+      })
     })()
 
     /**
@@ -126,11 +147,18 @@ class NpmBinDeps {
     pkgCopy.peerDependencies = {}
     pkgCopy.scripts = {}
 
-    fs.writeFileSync(
-      path.join(targetDir, 'package.json'),
-      JSON.stringify(pkgCopy, null, 2),
-      'utf8'
-    )
+    const packageJSONFile = path.join(targetDir, 'package.json')
+    try {
+      fs.writeFileSync(
+        packageJSONFile,
+        JSON.stringify(pkgCopy, null, 2),
+        'utf8'
+      )
+    } catch (err) {
+      console.error(green('npr: Could not write temporary package.json'))
+      console.error(green(`npr: Attempted to write ${packageJSONFile}`))
+      throw err
+    }
     const npmProc = spawn(
       'npm',
       ['install', '--loglevel', 'http'],
