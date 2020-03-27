@@ -17,6 +17,18 @@ class NpmBinDeps {
       return printHelp()
     }
 
+    if (argv[0] === 'cache' && argv[1] === 'clean') {
+      console.log(green(`npr: cache clean`))
+      const targetDir = path.join(
+        os.homedir(), '.config', 'npm-bin-deps'
+      )
+
+      const proc = spawn('rm', ['-rf', targetDir])
+      return proc.on('close', (code) => {
+        process.exit(code)
+      })
+    }
+
     const packageJSON = fs.readFileSync(
       path.join(process.cwd(), 'package.json'), 'utf8'
     )
@@ -173,6 +185,9 @@ function printHelp () {
   console.log('')
   console.log('It will use the version of the module listed')
   console.log('in binDependencies to run the package binary.')
+  console.log('')
+  console.log('Sometimes the cache can be corrupted.')
+  console.log('  You can run `npr cache clean` to clean the cache.')
   process.exit(0)
 }
 
