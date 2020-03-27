@@ -78,9 +78,12 @@ class NpmBinDeps {
     }
 
     if (command === 'which') {
-      const binary = path.join(
+      let binary = path.join(
         targetDir, 'node_modules', '.bin', argv[1]
       )
+      if (process.platform === 'win32') {
+        binary += '.cmd'
+      }
       console.log(binary)
       process.exit(0)
     }
