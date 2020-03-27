@@ -196,6 +196,10 @@ function printHelp () {
   console.log('')
   console.log('Sometimes the cache can be corrupted.')
   console.log('  You can run `npr cache clean` to clean the cache.')
+  console.log('')
+  console.log('Sometimes you want to know where the actual binary is.')
+  console.log('  You can run `npr which browserify` and it will print')
+  console.log('  the path to the browserify binary, like the which cmd')
   process.exit(0)
 }
 
