@@ -11,6 +11,18 @@ class NpmBinDeps {
     this.argv = process.argv.slice(2)
   }
 
+  cacheClean () {
+    console.log(green(`npr: cache clean`))
+    const targetDir = path.join(
+      os.homedir(), '.config', 'npm-bin-deps'
+    )
+
+    const proc = spawn('rm', ['-rf', targetDir])
+    return proc.on('close', (code) => {
+      process.exit(code)
+    })
+  }
+
   async main () {
     const argv = this.argv
     if (!argv[0] || argv[0] === '-h' || argv[0] === '--help') {
@@ -18,15 +30,7 @@ class NpmBinDeps {
     }
 
     if (argv[0] === 'cache' && argv[1] === 'clean') {
-      console.log(green(`npr: cache clean`))
-      const targetDir = path.join(
-        os.homedir(), '.config', 'npm-bin-deps'
-      )
-
-      const proc = spawn('rm', ['-rf', targetDir])
-      return proc.on('close', (code) => {
-        process.exit(code)
-      })
+      return this.cacheClean()
     }
 
     const packageJSON = fs.readFileSync(
