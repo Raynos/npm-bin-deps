@@ -31,7 +31,7 @@ function hasOwnProperty (obj, prop) {
   return Object.prototype.hasOwnProperty.call(obj, prop)
 }
 
-var onExit = function () {}
+var onExit = function noop() {}
 onExit(function () {
   debug('exit listener')
   // cleanup
