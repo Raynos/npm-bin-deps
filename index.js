@@ -5,6 +5,12 @@ const spawn = require('child_process').spawn
 const os = require('os')
 const path = require('path')
 const fs = require('fs')
+const util = require('util')
+
+const lockfile = require('./lockfile.js')
+
+const SECOND = 1000
+const MINUTE = 60 * SECOND
 
 class NpmBinDeps {
   constructor () {
@@ -104,55 +110,66 @@ class NpmBinDeps {
     })
   }
 
-  writePackageAndInstall (pkg, targetDir) {
-    return new Promise((resolve) => {
-      const pkgCopy = { ...pkg }
-      pkgCopy.dependencies = pkgCopy.binDependencies
-      pkgCopy.devDependencies = {}
-      pkgCopy.peerDependencies = {}
-      pkgCopy.scripts = {}
+  async writePackageAndInstall (pkg, targetDir) {
+    const lockPath = path.join(targetDir, 'npm-bin-deps.lock')
+    await util.promisify((cb) => {
+      lockfile.lock(lockPath, {
+        wait: 1 * MINUTE,
+        pollPeriod: 500,
+        stale: 5 * MINUTE
+      }, cb)
+    })()
 
-      fs.writeFileSync(
-        path.join(targetDir, 'package.json'),
-        JSON.stringify(pkgCopy, null, 2),
-        'utf8'
-      )
-      const npmProc = spawn(
-        'npm',
-        ['install', '--loglevel', 'http'],
-        {
-          cwd: targetDir
-        }
-      )
+    const pkgCopy = { ...pkg }
+    pkgCopy.dependencies = pkgCopy.binDependencies
+    pkgCopy.devDependencies = {}
+    pkgCopy.peerDependencies = {}
+    pkgCopy.scripts = {}
 
-      npmProc.stdout.on('data', (buf) => {
-        const lines = buf.toString('utf8').trim().split('\n')
-        for (const l of lines) {
-          if (l === '') {
-            console.log('')
-            continue
-          }
-          console.log(green(`npm install STDOUT: `) + l)
+    fs.writeFileSync(
+      path.join(targetDir, 'package.json'),
+      JSON.stringify(pkgCopy, null, 2),
+      'utf8'
+    )
+    const npmProc = spawn(
+      'npm',
+      ['install', '--loglevel', 'http'],
+      {
+        cwd: targetDir
+      }
+    )
+
+    npmProc.stdout.on('data', (buf) => {
+      const lines = buf.toString('utf8').trim().split('\n')
+      for (const l of lines) {
+        if (l === '') {
+          console.log('')
+          continue
         }
-      })
-      npmProc.stderr.on('data', (buf) => {
-        const lines = buf.toString('utf8').trim().split('\n')
-        for (const l of lines) {
-          if (l === '') {
-            console.error('')
-            continue
-          }
-          console.error(green(`npm install STDERR: `) + l)
+        console.log(green(`npm install STDOUT: `) + l)
+      }
+    })
+    npmProc.stderr.on('data', (buf) => {
+      const lines = buf.toString('utf8').trim().split('\n')
+      for (const l of lines) {
+        if (l === '') {
+          console.error('')
+          continue
         }
-      })
+        console.error(green(`npm install STDERR: `) + l)
+      }
+    })
+
+    await util.promisify((cb) => {
       npmProc.on('close', (code) => {
+        lockfile.unlockSync(lockPath)
         if (code !== 0) {
           console.log(green(`npm install exited non-zero ${code}`))
           fs.unlinkSync(path.join(targetDir, 'package.json'))
         }
-        resolve()
+        cb()
       })
-    })
+    })()
   }
 }
 
