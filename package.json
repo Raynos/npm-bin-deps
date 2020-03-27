@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "vendor": "cp node_modules/mkdirp/index.js ./mkdirp.js; sed -i '1s;^;// Copied from mkdirp@0.5.1.\\n;' mkdirp.js"
+    "vendor": "npm run vendor:lockfile && npm run vendor:rimraf",
+    "vendor:rimraf": "cp node_modules/rimraf/rimraf.js rimraf.js; sed -i '1s;^;// Copied from rimraf@3.0.2.\\n;' rimraf.js;",
+    "vendor:lockfile": "cp node_modules/lockfile/lockfile.js lockfile.js; sed -i '1s;^;// Copied from lockfile@1.0.4.\\n;' lockfile.js; sed -i 's#require(\\x27signal-exit\\x27)#function noop() {}#' lockfile.js"
   },
   "bin": {
     "npr": "index.js",
@@ -15,6 +17,7 @@
   "license": "MIT",
   "dependencies": {},
   "devDependencies": {
-    "mkdirp": "0.5.1"
+    "lockfile": "1.0.4",
+    "rimraf": "3.0.2"
   }
 }
