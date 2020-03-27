@@ -58,6 +58,15 @@ class NpmBinDeps {
     const command = argv[0]
     const args = argv.slice(1)
 
+    const lockPath = path.join(targetDir, 'npm-bin-deps.lock')
+    await util.promisify((cb) => {
+      lockfile.lock(lockPath, {
+        wait: 1 * MINUTE,
+        pollPeriod: 500,
+        stale: 5 * MINUTE
+      }, cb)
+    })()
+
     /**
      * Fresh installation
      */
@@ -82,6 +91,8 @@ class NpmBinDeps {
         console.log(green(`npr: install finished, running ${command}`))
       }
     }
+
+    lockfile.unlockSync(lockPath)
 
     if (command === 'which') {
       let binary = path.join(
@@ -111,15 +122,6 @@ class NpmBinDeps {
   }
 
   async writePackageAndInstall (pkg, targetDir) {
-    const lockPath = path.join(targetDir, 'npm-bin-deps.lock')
-    await util.promisify((cb) => {
-      lockfile.lock(lockPath, {
-        wait: 1 * MINUTE,
-        pollPeriod: 500,
-        stale: 5 * MINUTE
-      }, cb)
-    })()
-
     const pkgCopy = { ...pkg }
     pkgCopy.dependencies = pkgCopy.binDependencies
     pkgCopy.devDependencies = {}
@@ -162,7 +164,6 @@ class NpmBinDeps {
 
     await util.promisify((cb) => {
       npmProc.on('close', (code) => {
-        lockfile.unlockSync(lockPath)
         if (code !== 0) {
           console.log(green(`npm install exited non-zero ${code}`))
           fs.unlinkSync(path.join(targetDir, 'package.json'))
