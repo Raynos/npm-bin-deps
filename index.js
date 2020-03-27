@@ -6,8 +6,6 @@ const os = require('os')
 const path = require('path')
 const fs = require('fs')
 
-const mkdirp = require('./mkdirp.js').sync
-
 class NpmBinDeps {
   constructor () {
     this.argv = process.argv.slice(2)
@@ -33,7 +31,7 @@ class NpmBinDeps {
     const targetDir = path.join(
       os.homedir(), '.config', 'npm-bin-deps', pkg.name
     )
-    mkdirp(targetDir)
+    fs.mkdirSync(targetDir, { recursive: true })
 
     const command = argv[0]
     const args = argv.slice(1)
