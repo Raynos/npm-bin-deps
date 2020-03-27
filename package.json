@@ -4,7 +4,8 @@
   "description": "run cli dev deps with npr",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "vendor": "cp node_modules/lockfile/lockfile.js lockfile.js; sed -i '1s;^;// Copied from lockfile@1.0.4.\\n;' lockfile.js; sed -i 's#require(\\x27signal-exit\\x27)#function noop() {}#' lockfile.js"
   },
   "bin": {
     "npr": "index.js",
@@ -14,6 +15,6 @@
   "license": "MIT",
   "dependencies": {},
   "devDependencies": {
-    "mkdirp": "0.5.1"
+    "lockfile": "1.0.4"
   }
 }
