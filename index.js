@@ -8,6 +8,7 @@ const fs = require('fs')
 const util = require('util')
 
 const lockfile = require('./lockfile.js')
+const rimraf = require('./rimraf.js')
 
 const SECOND = 1000
 const MINUTE = 60 * SECOND
@@ -23,10 +24,7 @@ class NpmBinDeps {
       os.homedir(), '.config', 'npm-bin-deps'
     )
 
-    const proc = spawn('rm', ['-rf', targetDir])
-    return proc.on('close', (code) => {
-      process.exit(code)
-    })
+    rimraf.sync(targetDir)
   }
 
   async main () {
