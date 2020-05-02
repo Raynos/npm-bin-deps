@@ -201,6 +201,17 @@ The binDependencies listed in your package.json
 
 It will use the version of the module listed
 in binDependencies to run the package binary.
+
+If you want to install new bin dependencies you can
+  run `npr install x`
+This runs `npr` and updates binDependencies.
+
+Sometimes the cache can be corrupted.
+  You can run `npr cache clean` to clean the cache.
+
+Sometimes you want to know where the actual binary is.
+  You can run `npr which browserify` and it will print
+  the path to the browserify binary, like the which cmd
 ```
 
 The way this module works is that it installs all your

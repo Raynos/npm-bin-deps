@@ -19,12 +19,35 @@ class NpmBinDeps {
   }
 
   cacheClean () {
-    console.log(green(`npr: cache clean`))
+    console.log(green('npr: cache clean'))
     const targetDir = path.join(
       os.homedir(), '.config', 'npm-bin-deps'
     )
 
     rimraf.sync(targetDir)
+  }
+
+  async installBinDependency (currPkg, targetDir) {
+    console.log(green('npr: Installing new bin dependency'))
+
+    const packageJSONFile = path.join(process.cwd(), 'package.json')
+    const args = this.argv.slice(1)
+    args.push('--save-exact')
+    args.push('--save-prod')
+
+    await this.npmInstall(targetDir, args)
+
+    const packageJSON = fs.readFileSync(
+      path.join(targetDir, 'package.json'), 'utf8'
+    )
+    const existingPkg = JSON.parse(packageJSON)
+
+    currPkg.binDependencies = existingPkg.dependencies
+    fs.writeFileSync(
+      packageJSONFile,
+      JSON.stringify(currPkg, null, 2),
+      'utf8'
+    )
   }
 
   async main () {
@@ -53,7 +76,7 @@ class NpmBinDeps {
       ))
       throw err
     }
-    if (!pkg.binDependencies) {
+    if (!pkg.binDependencies && argv[0] !== 'install') {
       console.error(green(
         'npr: The "binDependencies" fields is missing ' +
         'from package.json.'
@@ -66,6 +89,10 @@ class NpmBinDeps {
       os.homedir(), '.config', 'npm-bin-deps', pkg.name
     )
     fs.mkdirSync(targetDir, { recursive: true })
+
+    if (argv[0] === 'install' && argv[1]) {
+      return this.installBinDependency(pkg, targetDir)
+    }
 
     const command = argv[0]
     const args = argv.slice(1)
@@ -90,7 +117,7 @@ class NpmBinDeps {
      * Fresh installation
      */
     if (!fs.existsSync(path.join(targetDir, 'package.json'))) {
-      console.log(green(`npr: first time npm install`))
+      console.log(green('npr: first time npm install'))
       await this.writePackageAndInstall(pkg, targetDir)
       console.log(green(`npr: install finished, running ${command}`))
     } else {
@@ -104,7 +131,7 @@ class NpmBinDeps {
       const changed = haveDependenciesChanged(pkg, existingPkg)
       if (changed) {
         console.log(
-          green(`npr: binDependencies changed => npm installs`)
+          green('npr: binDependencies changed => npm installs')
         )
         await this.writePackageAndInstall(pkg, targetDir)
         console.log(green(`npr: install finished, running ${command}`))
@@ -159,22 +186,29 @@ class NpmBinDeps {
       console.error(green(`npr: Attempted to write ${packageJSONFile}`))
       throw err
     }
+
+    return this.npmInstall(targetDir)
+  }
+
+  async npmInstall (targetDir, args) {
+    let cmd = ['install', '--loglevel', 'http']
+    if (args && Array.isArray(args) && args.length > 0) {
+      cmd = cmd.concat(args)
+    }
     const npmProc = spawn(
-      'npm',
-      ['install', '--loglevel', 'http'],
-      {
-        cwd: targetDir
-      }
+      'npm', cmd, { cwd: targetDir }
     )
 
+    const stdoutLines = []
     npmProc.stdout.on('data', (buf) => {
       const lines = buf.toString('utf8').trim().split('\n')
       for (const l of lines) {
+        stdoutLines.push(l)
         if (l === '') {
           console.log('')
           continue
         }
-        console.log(green(`npm install STDOUT: `) + l)
+        console.log(green('npm install STDOUT: ') + l)
       }
     })
     npmProc.stderr.on('data', (buf) => {
@@ -184,7 +218,7 @@ class NpmBinDeps {
           console.error('')
           continue
         }
-        console.error(green(`npm install STDERR: `) + l)
+        console.error(green('npm install STDERR: ') + l)
       }
     })
 
@@ -193,8 +227,9 @@ class NpmBinDeps {
         if (code !== 0) {
           console.log(green(`npm install exited non-zero ${code}`))
           fs.unlinkSync(path.join(targetDir, 'package.json'))
+          return cb(null)
         }
-        cb()
+        cb(null, stdoutLines)
       })
     })()
   }
@@ -229,7 +264,7 @@ function haveDependenciesChanged (userPkg, existingPkg) {
 }
 
 function printHelp () {
-  console.log(`npr [module] [...args]`)
+  console.log('npr [module] [...args]')
   console.log('NPR will run npm package binaries')
   console.log()
   console.log('This tool is similar to `npx` except it respects')
@@ -237,6 +272,10 @@ function printHelp () {
   console.log('')
   console.log('It will use the version of the module listed')
   console.log('in binDependencies to run the package binary.')
+  console.log('')
+  console.log('If you want to install new bin dependencies you can')
+  console.log('  run `npr install x`.')
+  console.log('This runs `npr` and updates binDependencies.')
   console.log('')
   console.log('Sometimes the cache can be corrupted.')
   console.log('  You can run `npr cache clean` to clean the cache.')
