@@ -132,8 +132,8 @@ class NpmBinDeps {
       return this.cacheClean(targetDir)
     }
 
-    const command = argv[0]
-    const args = argv.slice(1)
+    let command = argv[0]
+    let args = argv.slice(1)
 
     const lockPath = path.join(targetDir, 'npm-bin-deps.lock')
     await util.promisify((cb) => {
@@ -187,6 +187,11 @@ class NpmBinDeps {
       }
       console.log(binary)
       process.exit(0)
+    }
+
+    if (command === 'exec') {
+      command = argv[1]
+      args = args.slice(1)
     }
 
     let binary = path.join(
