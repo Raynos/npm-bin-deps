@@ -165,6 +165,47 @@ class NpmBinDeps {
     if (process.platform === 'win32') {
       binary += '.cmd'
     }
+
+    try {
+      fs.statSync(binary)
+    } catch (err) {
+      if (err.code !== 'ENOENT') throw err
+
+      console.error(green(`npr: ERROR Could not find command: ${command}`))
+      console.error(green(`npr: ERROR The file ${binary} does not exist.`))
+
+      let files
+      try {
+        files = fs.readdirSync(path.dirname(binary))
+      } catch (_err) {
+        // Ignore; best effort
+      }
+
+      if (files) {
+        console.error(green('npr: The following commands DO exist.'))
+
+        const lines = []
+        for (const file of files) {
+          let line = lines[lines.length - 1]
+          if (!line) {
+            line = []
+            lines.push(line)
+          }
+
+          if ((line.join(' ').length + file.length + 1) >= 80) {
+            line = []
+            lines.push(line)
+          }
+
+          line.push(file)
+        }
+        for (const line of lines) {
+          console.log('--  ' + line.join(' '))
+        }
+      }
+      return process.exit(1)
+    }
+
     const proc = spawn(binary, args, {
       cwd: process.cwd(),
       stdio: 'inherit'
