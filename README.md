@@ -192,26 +192,32 @@ drwxrwxr-x  3 raynos raynos 4096 Dec 19 12:32 xmlbuilder
 ## Docs :
 
 ```sh
-$ npr -h
-npr [module] [...args]
-NPR will run npm package binaries
+$ npr --help
+usage: npr [bindep] [...args]
+`npr` will execute your binary dependency
 
-This tool is similar to `npx` except it respects
-The binDependencies listed in your package.json
+`npr` respects the dependencies listed in "binDependencies" in package.json
+These are command `npr` commands used in various situations:
 
-It will use the version of the module listed
-in binDependencies to run the package binary.
+Run a binary command
+    npr [bindep]       Run a command; e.g. npr standard or npr tap
+    npr exec [bindep]  Run a command; e.g. npr exec standard or npr exec tap
 
-If you want to install new bin dependencies you can
-  run `npr install x`
-This runs `npr` and updates binDependencies.
+Install or remove a binary dependency
+    npr install [bindep]  Install a new binary dependency
+    npr rm [bindep]       Remove a binary dependency
 
-Sometimes the cache can be corrupted.
-  You can run `npr cache clean` to clean the cache.
+Clean the cache; if corrupted or broken
+    npr cache clean       Clean the npr install cache.
 
-Sometimes you want to know where the actual binary is.
-  You can run `npr which browserify` and it will print
-  the path to the browserify binary, like the which cmd
+Inspect existing bin dependencies
+    npr which [bindep]  Return the binary location for bindep
+    npr ls              List all binary deps installed.
+
+When running `npr`; you can handedit "binDependencies" in package.json and
+the `npr exec [bindep]` command will make sure to download the new version
+before executing the binary dependency.
+
 ```
 
 The way this module works is that it installs all your
