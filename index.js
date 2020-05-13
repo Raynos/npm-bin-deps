@@ -42,14 +42,19 @@ class NpmBinDeps {
     currPkg.binDependencies = existingPkg.dependencies
     fs.writeFileSync(
       packageJSONFile,
-      JSON.stringify(currPkg, null, 2),
+      JSON.stringify(currPkg, null, 2) + '\n',
       'utf8'
     )
   }
 
   async main () {
     const argv = this.argv
-    if (!argv[0] || argv[0] === '-h' || argv[0] === '--help') {
+    if (
+      !argv[0] ||
+      argv[0] === '-h' ||
+      argv[0] === '--help' ||
+      argv[0] === 'help'
+    ) {
       return printHelp()
     }
 
