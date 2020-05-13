@@ -12,6 +12,9 @@ const rimraf = require('./rimraf.js')
 
 const SECOND = 1000
 const MINUTE = 60 * SECOND
+const WHITELIST_COMMANDS = [
+  'cache', 'help', 'exec', 'ls', 'install', 'rm', 'which'
+]
 
 class NpmBinDeps {
   constructor () {
@@ -39,6 +42,30 @@ class NpmBinDeps {
     )
     const existingPkg = JSON.parse(packageJSON)
 
+    currPkg.binDependencies = existingPkg.dependencies
+    fs.writeFileSync(
+      packageJSONFile,
+      JSON.stringify(currPkg, null, 2) + '\n',
+      'utf8'
+    )
+  }
+
+  async rmBinDependency (currPkg, targetDir) {
+    console.log(green('npr: Removing a bin dependency'))
+
+    const packageJSONFile = path.join(process.cwd(), 'package.json')
+    const args = this.argv.slice(1)
+    args.push('--save-exact')
+    args.push('--save-prod')
+    args.push('--loglevel')
+    args.push('http')
+
+    await this.npmCommand(targetDir, ['rm', ...args])
+
+    const packageJSON = fs.readFileSync(
+      path.join(targetDir, 'package.json'), 'utf8'
+    )
+    const existingPkg = JSON.parse(packageJSON)
     currPkg.binDependencies = existingPkg.dependencies
     fs.writeFileSync(
       packageJSONFile,
@@ -90,6 +117,9 @@ class NpmBinDeps {
 
     if (argv[0] === 'install') {
       return this.installBinDependency(pkg, targetDir)
+    }
+    if (argv[0] === 'rm') {
+      return this.rmBinDependency(pkg, targetDir)
     }
     if (argv[0] === 'ls') {
       const cmd = ['ls']
