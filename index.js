@@ -12,9 +12,6 @@ const rimraf = require('./rimraf.js')
 
 const SECOND = 1000
 const MINUTE = 60 * SECOND
-const WHITELIST_COMMANDS = [
-  'cache', 'help', 'exec', 'ls', 'install', 'rm', 'which'
-]
 
 class NpmBinDeps {
   constructor () {
@@ -76,12 +73,10 @@ class NpmBinDeps {
 
   async main () {
     const argv = this.argv
-    if (
-      !argv[0] ||
-      argv[0] === '-h' ||
-      argv[0] === '--help' ||
-      argv[0] === 'help'
-    ) {
+    if (argv[0] === '-h') {
+      return printShortHelp()
+    }
+    if (!argv[0] || argv[0] === '--help' || argv[0] === 'help') {
       return printHelp()
     }
 
@@ -128,6 +123,8 @@ class NpmBinDeps {
       }
       return this.npmCommand(targetDir, cmd)
     }
+    // TODO: argv[0] rebuild
+    // TODO: argv[0] update
     if (argv[0] === 'cache' && argv[1] === 'clean') {
       return this.cacheClean(targetDir)
     }
@@ -362,26 +359,40 @@ function haveDependenciesChanged (userPkg, existingPkg) {
   return hasChanged
 }
 
+function printShortHelp () {
+  console.log('usage: npr [bindep] [...args]')
+  console.log('`npr` will execute your binary dependency')
+  console.log('')
+  console.log('For other commands see npr --help')
+}
+
 function printHelp () {
-  console.log('npr [module] [...args]')
-  console.log('NPR will run npm package binaries')
-  console.log()
-  console.log('This tool is similar to `npx` except it respects')
-  console.log('The binDependencies listed in your package.json')
-  console.log('')
-  console.log('It will use the version of the module listed')
-  console.log('in binDependencies to run the package binary.')
-  console.log('')
-  console.log('If you want to install new bin dependencies you can')
-  console.log('  run `npr install x`.')
-  console.log('This runs `npr` and updates binDependencies.')
-  console.log('')
-  console.log('Sometimes the cache can be corrupted.')
-  console.log('  You can run `npr cache clean` to clean the cache.')
-  console.log('')
-  console.log('Sometimes you want to know where the actual binary is.')
-  console.log('  You can run `npr which browserify` and it will print')
-  console.log('  the path to the browserify binary, like the which cmd')
+  const l = console.log
+  l('usage: npr [bindep] [...args]')
+  l('`npr` will execute your binary dependency')
+  l('')
+  l('`npr` respects the dependencies listed in "binDependencies" in package.json')
+  l('These are command `npr` commands used in various situations:')
+  l('')
+  l('Run a binary command')
+  l('    npr [bindep]       Run a command; e.g. npr standard or npr tap')
+  l('    npr exec [bindep]  Run a command; e.g. npr exec standard or npr exec tap')
+  l('')
+  l('Install or remove a binary dependency')
+  l('    npr install [bindep]  Install a new binary dependency')
+  l('    npr rm [bindep]       Remove a binary dependency')
+  l('')
+  l('Clean the cache; if corrupted or broken')
+  l('    npr cache clean       Clean the npr install cache.')
+  l('')
+  l('Inspect existing bin dependencies')
+  l('    npr which [bindep]  Return the binary location for bindep')
+  l('    npr ls              List all binary deps installed.')
+  l('')
+  l('When running `npr`; you can handedit "binDependencies" in package.json and')
+  l('the `npr exec [bindep]` command will make sure to download the new version')
+  l('before executing the binary dependency.')
+  l('')
   process.exit(0)
 }
 
