@@ -88,8 +88,15 @@ class NpmBinDeps {
     )
     fs.mkdirSync(targetDir, { recursive: true })
 
-    if (argv[0] === 'install' && argv[1]) {
+    if (argv[0] === 'install') {
       return this.installBinDependency(pkg, targetDir)
+    }
+    if (argv[0] === 'ls') {
+      const cmd = ['ls']
+      if (argv.length > 1) {
+        cmd.push(...argv.slice(1))
+      }
+      return this.npmCommand(targetDir, cmd)
     }
     if (argv[0] === 'cache' && argv[1] === 'clean') {
       return this.cacheClean(targetDir)
@@ -196,6 +203,12 @@ class NpmBinDeps {
     if (args && Array.isArray(args) && args.length > 0) {
       cmd = cmd.concat(args)
     }
+
+    return this.npmCommand(targetDir, cmd, true)
+  }
+
+  async npmCommand (targetDir, cmd, prefixStdout) {
+    const command = cmd[0]
     const npmProc = spawn(
       'npm', cmd, { cwd: targetDir }
     )
@@ -209,7 +222,12 @@ class NpmBinDeps {
           console.log('')
           continue
         }
-        console.log(green('npm install STDOUT: ') + l)
+
+        if (prefixStdout) {
+          console.log(green(`npm ${command} STDOUT: `) + l)
+        } else {
+          console.log(l)
+        }
       }
     })
     npmProc.stderr.on('data', (buf) => {
@@ -219,14 +237,18 @@ class NpmBinDeps {
           console.error('')
           continue
         }
-        console.error(green('npm install STDERR: ') + l)
+        if (prefixStdout) {
+          console.error(green(`npm ${command} STDERR: `) + l)
+        } else {
+          console.error(l)
+        }
       }
     })
 
     await util.promisify((cb) => {
       npmProc.on('close', (code) => {
         if (code !== 0) {
-          console.log(green(`npm install exited non-zero ${code}`))
+          console.log(green(`npm ${command} exited non-zero ${code}`))
           fs.unlinkSync(path.join(targetDir, 'package.json'))
           return cb(null)
         }
