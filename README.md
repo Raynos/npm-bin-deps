@@ -12,6 +12,37 @@ that are NOT related to production code.
 `npm-bin-deps` solves half the problem, look at the sister
 project [`pre-bundled`][pre-bundled] to solve the other half.
 
+## Docs :
+
+```sh
+$ npr --help
+usage: npr [bindep] [...args]
+`npr` will execute your binary dependency
+
+`npr` respects the dependencies listed in "binDependencies" in package.json
+These are command `npr` commands used in various situations:
+
+Run a binary command
+    npr [bindep]       Run a command; e.g. npr standard or npr tap
+    npr exec [bindep]  Run a command; e.g. npr exec standard or npr exec tap
+
+Install or remove a binary dependency
+    npr install [bindep]  Install a new binary dependency
+    npr rm [bindep]       Remove a binary dependency
+
+Clean the cache; if corrupted or broken
+    npr cache clean       Clean the npr install cache.
+
+Inspect existing bin dependencies
+    npr which [bindep]  Return the binary location for bindep
+    npr ls              List all binary deps installed.
+
+When running `npr`; you can handedit "binDependencies" in package.json and
+the `npr exec [bindep]` command will make sure to download the new version
+before executing the binary dependency.
+
+```
+
 ## Example
 
 Add a top level `binDependencies` to your `package.json` that
@@ -189,36 +220,7 @@ drwxrwxr-x  3 raynos raynos 4096 Dec 19 12:32 xml2js
 drwxrwxr-x  3 raynos raynos 4096 Dec 19 12:32 xmlbuilder
 ```
 
-## Docs :
-
-```sh
-$ npr --help
-usage: npr [bindep] [...args]
-`npr` will execute your binary dependency
-
-`npr` respects the dependencies listed in "binDependencies" in package.json
-These are command `npr` commands used in various situations:
-
-Run a binary command
-    npr [bindep]       Run a command; e.g. npr standard or npr tap
-    npr exec [bindep]  Run a command; e.g. npr exec standard or npr exec tap
-
-Install or remove a binary dependency
-    npr install [bindep]  Install a new binary dependency
-    npr rm [bindep]       Remove a binary dependency
-
-Clean the cache; if corrupted or broken
-    npr cache clean       Clean the npr install cache.
-
-Inspect existing bin dependencies
-    npr which [bindep]  Return the binary location for bindep
-    npr ls              List all binary deps installed.
-
-When running `npr`; you can handedit "binDependencies" in package.json and
-the `npr exec [bindep]` command will make sure to download the new version
-before executing the binary dependency.
-
-```
+### Docs how it works
 
 The way this module works is that it installs all your
 `binDependencies` in a temporarly location.
