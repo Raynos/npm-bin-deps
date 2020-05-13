@@ -18,11 +18,8 @@ class NpmBinDeps {
     this.argv = process.argv.slice(2)
   }
 
-  cacheClean () {
+  cacheClean (targetDir) {
     console.log(green('npr: cache clean'))
-    const targetDir = path.join(
-      os.homedir(), '.config', 'npm-bin-deps'
-    )
 
     rimraf.sync(targetDir)
   }
@@ -54,10 +51,6 @@ class NpmBinDeps {
     const argv = this.argv
     if (!argv[0] || argv[0] === '-h' || argv[0] === '--help') {
       return printHelp()
-    }
-
-    if (argv[0] === 'cache' && argv[1] === 'clean') {
-      return this.cacheClean()
     }
 
     const packageJSONFile = path.join(process.cwd(), 'package.json')
@@ -92,6 +85,9 @@ class NpmBinDeps {
 
     if (argv[0] === 'install' && argv[1]) {
       return this.installBinDependency(pkg, targetDir)
+    }
+    if (argv[0] === 'cache' && argv[1] === 'clean') {
+      return this.cacheClean(targetDir)
     }
 
     const command = argv[0]
