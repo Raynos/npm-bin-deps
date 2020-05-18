@@ -389,7 +389,7 @@ function printHelp () {
   l('    npr which [bindep]  Return the binary location for bindep')
   l('    npr ls              List all binary deps installed.')
   l('')
-  l('When running `npr`; you can handedit "binDependencies" in package.json and')
+  l('When running `npr`; you can hand-edit "binDependencies" in package.json and')
   l('the `npr exec [bindep]` command will make sure to download the new version')
   l('before executing the binary dependency.')
   l('')

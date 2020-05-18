@@ -37,7 +37,7 @@ Inspect existing bin dependencies
     npr which [bindep]  Return the binary location for bindep
     npr ls              List all binary deps installed.
 
-When running `npr`; you can handedit "binDependencies" in package.json and
+When running `npr`; you can hand-edit "binDependencies" in package.json and
 the `npr exec [bindep]` command will make sure to download the new version
 before executing the binary dependency.
 
