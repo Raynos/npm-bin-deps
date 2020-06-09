@@ -282,9 +282,8 @@ class NpmBinDeps {
 
   async npmCommand (targetDir, cmd, prefixStdout) {
     const command = cmd[0]
-    const npmProc = spawn(
-      'npm', cmd, { cwd: targetDir }
-    )
+    const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm'
+    const npmProc = spawn(npmCmd, cmd, { cwd: targetDir })
 
     const stdoutLines = []
     npmProc.stdout.on('data', (buf) => {
