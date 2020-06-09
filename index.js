@@ -21,7 +21,7 @@ class NpmBinDeps {
   cacheClean (targetDir) {
     console.log(green('npr: cache clean'))
 
-    rimraf.sync(targetDir)
+    rimraf.sync(targetDir, { disableGlob: true })
   }
 
   async installBinDependency (currPkg, targetDir) {
