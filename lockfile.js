@@ -31,7 +31,7 @@ function hasOwnProperty (obj, prop) {
   return Object.prototype.hasOwnProperty.call(obj, prop)
 }
 
-var onExit = function noop() {}
+var onExit = require('./signal-exit.js')
 onExit(function () {
   debug('exit listener')
   // cleanup
