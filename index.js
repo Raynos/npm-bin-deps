@@ -206,6 +206,12 @@ class NpmBinDeps {
       console.error(green(`npr: ERROR Could not find command: ${command}`))
       console.error(green(`npr: ERROR The file ${binary} does not exist.`))
 
+      console.error(green('npr: Checking node_modules integrity with npm ls'))
+      const out = await this.npmCommand(targetDir, ['ls'], false, true)
+      if (out && typeof out.exitCode === 'number') {
+        console.error(green('npr: npm ls failed; deleting cached node_modules'))
+      }
+
       let files
       try {
         files = fs.readdirSync(path.dirname(binary))
@@ -280,7 +286,7 @@ class NpmBinDeps {
     return this.npmCommand(targetDir, cmd, true)
   }
 
-  async npmCommand (targetDir, cmd, prefixStdout) {
+  async npmCommand (targetDir, cmd, prefixStdout, silent) {
     const command = cmd[0]
     const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm'
     const npmProc = spawn(npmCmd, cmd, { cwd: targetDir })
@@ -290,11 +296,12 @@ class NpmBinDeps {
       const lines = buf.toString('utf8').trim().split('\n')
       for (const l of lines) {
         stdoutLines.push(l)
+
+        if (silent) continue
         if (l === '') {
           console.log('')
           continue
         }
-
         if (prefixStdout) {
           console.log(green(`npm ${command} STDOUT: `) + l)
         } else {
@@ -304,6 +311,8 @@ class NpmBinDeps {
     })
     npmProc.stderr.on('data', (buf) => {
       const lines = buf.toString('utf8').trim().split('\n')
+
+      if (silent) return
       for (const l of lines) {
         if (l === '') {
           console.error('')
@@ -317,12 +326,12 @@ class NpmBinDeps {
       }
     })
 
-    await util.promisify((cb) => {
+    return await util.promisify((cb) => {
       npmProc.on('close', (code) => {
         if (code !== 0) {
           console.log(green(`npm ${command} exited non-zero ${code}`))
           fs.unlinkSync(path.join(targetDir, 'package.json'))
-          return cb(null)
+          return cb(null, { exitCode: code })
         }
         cb(null, stdoutLines)
       })
