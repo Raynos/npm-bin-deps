@@ -27,6 +27,13 @@ class NpmBinDeps {
   async installBinDependency (currPkg, targetDir) {
     console.log(green('npr: Installing new bin dependency'))
 
+    /**
+     * Fresh installation
+     */
+    if (!fs.existsSync(path.join(targetDir, 'package.json'))) {
+      await this.writePackage(currPkg, targetDir)
+    }
+
     const packageJSONFile = path.join(process.cwd(), 'package.json')
     const args = this.argv.slice(1)
     args.push('--save-exact')
@@ -254,7 +261,7 @@ class NpmBinDeps {
     })
   }
 
-  async writePackageAndInstall (pkg, targetDir) {
+  async writePackage (pkg, targetDir) {
     const pkgCopy = { ...pkg }
     pkgCopy.dependencies = pkgCopy.binDependencies
     pkgCopy.devDependencies = {}
@@ -273,7 +280,10 @@ class NpmBinDeps {
       console.error(green(`npr: Attempted to write ${packageJSONFile}`))
       throw err
     }
+  }
 
+  async writePackageAndInstall (pkg, targetDir) {
+    await this.writePackage(pkg, targetDir)
     return this.npmInstall(targetDir)
   }
 
