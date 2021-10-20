@@ -12,6 +12,7 @@
   },
   "bin": {
     "npr": "index.js",
+    "nbd": "index.js",
     "npm-bin-deps": "index.js"
   },
   "author": "Raynos",
