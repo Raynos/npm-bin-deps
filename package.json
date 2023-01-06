@@ -20,6 +20,7 @@
   "dependencies": {},
   "devDependencies": {
     "lockfile": "1.0.4",
+    "tape": "^5",
     "signal-exit": "3.0.3",
     "rimraf": "3.0.2"
   }
