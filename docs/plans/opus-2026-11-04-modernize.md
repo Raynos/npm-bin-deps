@@ -72,11 +72,9 @@ the cache's package.json; no tests.
 - Result: `node_modules` holds the runtime four (hono,
   @hono/node-server, preact, zod) plus about five dev packages.
 
-## Open decisions for Jake
+## Decided (Jake, 2026-11-04)
 
-- Lockfile format: a pnpm lockfile (reuses pnpm's integrity and age
-  rules) or our own JSON (name, version, integrity per package)?
-- Publish to npm as `npm-bin-deps@2`, or keep it a git dependency of
-  greenroom?
-- Should `@types/node` move to the cache too, with `typeRoots`
-  pointing there?
+- Lockfile: a pnpm lockfile (`bin-deps.lock.yaml`).
+- Ship as `npm-bin-deps@2` on npm.
+- `@types/node` stays a normal devDependency in greenroom.
+- "Not yet": the plan stays a draft until Jake's go.
