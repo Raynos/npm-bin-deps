@@ -3,6 +3,9 @@
   "version": "1.10.2",
   "description": "run cli dev deps with npr",
   "main": "index.js",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "check": "tsc --noEmit --checkJs -p .",
     "test": "node --test test/parity.test.js test/lockfile.test.js test/manager.test.js test/cache.test.js test/siblings.test.js test/lock.test.js test/run.test.js"

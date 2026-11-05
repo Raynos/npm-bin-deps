@@ -6,7 +6,9 @@ Parity suite written against 1.10.2 first; rows done: v1 parity,
 lockfile in `binDependenciesDir`, manager detection and installer,
 content-addressed cache, sibling binaries, built-ins over vendored
 code, types and lint, tests (green under a macOS sandbox with
-outbound network denied).
+outbound network denied), CI (workflow in; its steps pass locally on
+macOS with Node 20.20.2, 22.23.4 and 24.21.0; Linux and Windows
+unrun until Jake pushes).
 Owner: Jake. Builder: Claude Code (claude-opus-5-5).
 
 ## Why
@@ -108,7 +110,7 @@ install deletes the cache's package.json; no tests.
   built with `npm pack` and installed from local tarballs (no
   registry, no network). Done when `npm test` passes with the network
   off.
-- [ ] **CI.** GitHub Actions matrix: ubuntu, macos, windows; Node 20,
+- [x] **CI.** GitHub Actions matrix: ubuntu, macos, windows; Node 20,
   22, 24; runs check + test. Done when the workflow file is in and
   passes locally where it can (`act` not required).
 - [ ] **Docs.** README rewritten for 2.0 (the new fields, the
