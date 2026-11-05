@@ -83,3 +83,25 @@ test('with no binDependencies anywhere, npr still names the missing field', asyn
   assert.notEqual(res.code, 0, h.dump(res))
   assert.match(res.stderr, /"binDependencies" field is missing/)
 })
+
+test('a catalog: bin dependency takes the version from the catalog', async () => {
+  const box = h.makeSandbox()
+  const catalog = (/** @type {string} */ spec) => fs.writeFileSync(
+    path.join(box.project, 'pnpm-workspace.yaml'),
+    `packages:\n  - "packages/*"\ncatalog:\n  fx-echo: ${JSON.stringify(spec)}\n`
+  )
+  catalog(fx['fx-echo@1.0.0'])
+  h.writeProject(box, { binDependencies: { 'fx-echo': 'catalog:' } })
+
+  const first = await h.npr(box, ['fx-echo'])
+  assert.equal(first.code, 0, h.dump(first))
+  assert.equal(h.lastJSONLine(first.stdout).version, '1.0.0')
+  const generated = h.readJSON(path.join(box.project, '.bin-deps', 'package.json'))
+  assert.equal(generated.dependencies['fx-echo'], fx['fx-echo@1.0.0'])
+  assert.equal(h.readProject(box).binDependencies['fx-echo'], 'catalog:')
+
+  catalog(fx['fx-echo@2.0.0'])
+  const bumped = await h.npr(box, ['fx-echo'])
+  assert.equal(bumped.code, 0, h.dump(bumped))
+  assert.equal(h.lastJSONLine(bumped.stdout).version, '2.0.0')
+})
