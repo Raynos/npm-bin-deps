@@ -2,6 +2,8 @@
 
 Status: in progress 2026-11-05: Jake said go; a Claude Code agent
 builds it row by row, commits locally, never pushes or publishes.
+Parity suite written against 1.10.2 first; rows done: lockfile in
+`binDependenciesDir`.
 Owner: Jake. Builder: Claude Code (claude-opus-5-5).
 
 ## Why
@@ -74,7 +76,7 @@ install deletes the cache's package.json; no tests.
   command, these DO exist" listing. Done when a parity test runs each
   1.x command against fixtures and the help text lists the same
   commands plus the new ones.
-- [ ] **Lockfile in `binDependenciesDir`.** `npr install <pkg>` /
+- [x] **Lockfile in `binDependenciesDir`.** `npr install <pkg>` /
   `npr rm <pkg>` update `binDependencies`, regenerate
   `<dir>/package.json` and the native lockfile; `npr install --frozen`
   installs from it without changing it. Done when a test commits the
