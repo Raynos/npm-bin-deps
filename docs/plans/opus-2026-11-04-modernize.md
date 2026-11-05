@@ -137,3 +137,30 @@ install deletes the cache's package.json; no tests.
   matrix; Node 20 floor; CommonJS; commands run/exec/which/ls,
   install/rm, cache prune/clean; no extra guard on npm; v1 feature
   parity; a subagent builds it; Jake reviews, pushes and publishes.
+- 2026-11-05 (after the build): the project's `overrides` /
+  `pnpm.overrides` carry over into the generated package.json; a
+  lockfile already in `binDependenciesDir` is a detection step (after
+  the root lockfile, before the user agent) so the manager sticks;
+  the project's `.npmrc` registry and auth lines apply to installs,
+  never logged and never written into `binDependenciesDir`; before
+  push: a LICENSE (MIT), CI actions pinned to commit SHAs, `npr which
+  <missing>` exits 1, a README note that `~/.config/npm-bin-deps`
+  (the 1.x cache) can be deleted. A fresh subagent builds these rows;
+  the stray root `pnpm-lock.yaml` gets gitignored (the repo is npm).
+  greenroom adopts only after 2.0.0 is on npm, and its CI caches
+  `~/.cache/npm-bin-deps` keyed on the `src/bin-deps` lockfile.
+
+## Rows from the 2026-11-05 review
+
+- [ ] **Overrides carry over.** Done when a test sets an override in
+  the project and the bin-deps install resolves the overridden
+  version (npm and pnpm).
+- [ ] **Dir lockfile detection.** Done when a test with no
+  `packageManager` and no root lockfile keeps pnpm when run under an
+  npm user agent because `<dir>/pnpm-lock.yaml` exists.
+- [ ] **Project `.npmrc` applies.** Done when a test points the
+  project `.npmrc` registry at the local fixture registry and the
+  install uses it, and the token never appears in output or in
+  `binDependenciesDir`.
+- [ ] **Pre-push fixes.** LICENSE, SHA-pinned actions, `npr which`
+  exit 1 (parity test), README cache note.
