@@ -2,8 +2,9 @@
 
 Status: in progress 2026-11-05: Jake said go; a Claude Code agent
 builds it row by row, commits locally, never pushes or publishes.
-Parity suite written against 1.10.2 first; rows done: lockfile in
-`binDependenciesDir`, manager detection and installer.
+Parity suite written against 1.10.2 first; rows done: v1 parity,
+lockfile in `binDependenciesDir`, manager detection and installer,
+content-addressed cache.
 Owner: Jake. Builder: Claude Code (claude-opus-5-5).
 
 ## Why
@@ -67,7 +68,7 @@ install deletes the cache's package.json; no tests.
 
 ## Rows
 
-- [ ] **v1 parity.** Every 1.x behaviour stays: `npr <bin> [args]`,
+- [x] **v1 parity.** Every 1.x behaviour stays: `npr <bin> [args]`,
   `npr exec <bin>`, `npr which <bin>`, `npr ls`, `npr install
   <pkg>`, `npr rm <pkg>`, `npr cache clean`, `-h`/`--help`/`help`,
   the `npr`/`nbd`/`npm-bin-deps` bin aliases, reinstall when
@@ -87,7 +88,7 @@ install deletes the cache's package.json; no tests.
   tests cover each detection source, the override, and (pnpm) a
   package newer than `minimumReleaseAge` refused and an unlisted
   install script not run.
-- [ ] **Content-addressed cache.** Hash-keyed dirs, an access stamp
+- [x] **Content-addressed cache.** Hash-keyed dirs, an access stamp
   per run, `npr cache prune` (unused 30 days), `npr cache clean`
   (this project's current dir). Done when two projects with the same
   name and different versions run side by side.

@@ -57,6 +57,12 @@ const V1_HELP_COMMANDS = [
   'npr ls'
 ]
 
+// The commands 2.x added.
+const V2_HELP_COMMANDS = [
+  'npr install --frozen',
+  'npr cache prune'
+]
+
 test('help: --help, help and no args print the full help', async () => {
   const box = h.makeSandbox()
   for (const args of [['--help'], ['help'], []]) {
@@ -65,7 +71,7 @@ test('help: --help, help and no args print the full help', async () => {
     const out = h.plain(res.stdout)
     assert.match(out, /^usage: npr \[bindep\] \[\.\.\.args\]/m)
     const lines = out.split(/\r?\n/).map((l) => l.trim())
-    for (const cmd of V1_HELP_COMMANDS) {
+    for (const cmd of V1_HELP_COMMANDS.concat(V2_HELP_COMMANDS)) {
       assert.ok(
         lines.some((l) => l.startsWith(cmd + ' ')),
         `help for ${JSON.stringify(args)} lists "${cmd}"\n${out}`
