@@ -4,7 +4,7 @@ Status: in progress 2026-11-05: Jake said go; a Claude Code agent
 builds it row by row, commits locally, never pushes or publishes.
 Parity suite written against 1.10.2 first; rows done: v1 parity,
 lockfile in `binDependenciesDir`, manager detection and installer,
-content-addressed cache.
+content-addressed cache, sibling binaries.
 Owner: Jake. Builder: Claude Code (claude-opus-5-5).
 
 ## Why
@@ -92,7 +92,7 @@ install deletes the cache's package.json; no tests.
   per run, `npr cache prune` (unused 30 days), `npr cache clean`
   (this project's current dir). Done when two projects with the same
   name and different versions run side by side.
-- [ ] **Sibling binaries.** `PATH` and `OXLINT_TSGOLINT_PATH`. Done
+- [x] **Sibling binaries.** `PATH` and `OXLINT_TSGOLINT_PATH`. Done
   when an e2e test runs `npr oxlint --type-aware` (or a fixture
   equivalent) with no oxlint in the project's `node_modules`.
 - [ ] **Built-ins over vendored code.** Replace `rimraf.js`,
