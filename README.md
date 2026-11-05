@@ -92,8 +92,13 @@ package.json fields
                               lockfile beside package.json, then npm
 ```
 
-`npr` reads package.json from the current directory, which is where
-`npm run` and `pnpm run` start scripts.
+`npr` uses the nearest package.json, in or above the current directory,
+that has `binDependencies`. In a monorepo, list the tools once in the
+root package.json: `npr` run from a workspace package (where `npm run`
+and `pnpm run` start scripts) uses them, and the tool still runs in
+that package's directory. A package that lists its own
+`binDependencies` uses those instead. `npr install <pkg>` adds to the
+same package.json `npr` would run from.
 
 `npr`'s own messages go to stderr; a tool's stdout is left alone, so
 `$(npr which tsc)` gives just the path.
