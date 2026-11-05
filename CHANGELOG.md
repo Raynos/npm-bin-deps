@@ -55,6 +55,10 @@ a content-addressed cache.
   stale. Meant for `prepare` and CI.
 - `npr cache prune`: remove installs unused for 30 days.
 - `binDependenciesDir` and `binDependenciesInstaller` in package.json.
+- The project's `.npmrc` registry and auth lines (`registry`,
+  `@scope:registry`, `//host/:_authToken` and the like) apply to
+  installs; 1.x ignored the project `.npmrc`. They are never logged
+  or written into `binDependenciesDir`.
 - pnpm's `minimumReleaseAge`, `minimumReleaseAgeExclude`,
   `strictDepBuilds`, `onlyBuiltDependencies` and
   `ignoredOptionalDependencies` carry over from the project.

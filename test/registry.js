@@ -16,7 +16,8 @@ const http = require('node:http')
  *   url: string,
  *   publish: (spec: FixtureSpec, tarball: string, time?: Date) => void,
  *   close: () => Promise<void>,
- *   requests: string[]
+ *   requests: string[],
+ *   authorizations: string[]
  * }} Registry
  */
 
@@ -74,11 +75,14 @@ async function startRegistry () {
   const packages = new Map()
   /** @type {string[]} */
   const requests = []
+  /** @type {string[]} the authorization header of each request, or '' */
+  const authorizations = []
   let base = ''
 
   const server = http.createServer((req, res) => {
     const urlPath = decodeURIComponent((req.url || '/').split('?')[0])
     requests.push(urlPath)
+    authorizations.push(req.headers.authorization || '')
 
     const tarballMatch = /^\/(.+)\/-\/[^/]+-(\d+\.\d+\.\d+)\.tgz$/.exec(urlPath)
     if (tarballMatch) {
@@ -139,6 +143,7 @@ async function startRegistry () {
   return {
     url: base + '/',
     requests,
+    authorizations,
     publish (spec, tarball, time) {
       let versions = packages.get(spec.name)
       if (!versions) {

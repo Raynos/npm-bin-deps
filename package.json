@@ -13,7 +13,7 @@
   },
   "scripts": {
     "check": "tsc --noEmit --checkJs -p .",
-    "test": "node --test test/parity.test.js test/lockfile.test.js test/manager.test.js test/overrides.test.js test/cache.test.js test/siblings.test.js test/lock.test.js test/run.test.js test/docs.test.js test/release.test.js"
+    "test": "node --test test/parity.test.js test/lockfile.test.js test/manager.test.js test/overrides.test.js test/npmrc.test.js test/cache.test.js test/siblings.test.js test/lock.test.js test/run.test.js test/docs.test.js test/release.test.js"
   },
   "bin": {
     "npr": "index.js",

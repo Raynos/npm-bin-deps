@@ -172,6 +172,19 @@ onlyBuiltDependencies:
 With **npm**, there is no extra guard: npm runs install scripts as it
 normally would.
 
+### Registry and auth
+
+Installs run in the cache, outside your project, so npm and pnpm would
+not see the project's `.npmrc`. npr carries its registry and auth
+lines over: `registry=`, `@scope:registry=`, anything scoped to a
+registry host (`//host/:_authToken=`, `//host/:_auth=`, ...) and the
+top-level `_auth`, `_authToken`, `username`, `_password`, `email` and
+`always-auth`. They are copied verbatim, so `${NPM_TOKEN}` still
+expands from the environment, written to a `.npmrc` in the cache dir
+for the length of the install and removed after. npr never logs them
+and never writes them into `binDependenciesDir`. Your user `~/.npmrc`
+and `npm_config_*` variables apply as usual.
+
 ### Sibling tools
 
 A tool runs with its install's `node_modules/.bin` first on `PATH`, so
