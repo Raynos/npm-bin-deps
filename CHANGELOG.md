@@ -39,10 +39,12 @@ a content-addressed cache.
   `cache`.
 - **`npr rm`** takes package names and no longer passes flags to
   `npm rm`.
-- **The generated package.json holds only `dependencies`.** 1.x
-  copied the whole project package.json (so fields such as
-  `overrides` reached the install) and blanked `scripts`,
-  `devDependencies` and `peerDependencies`.
+- **The generated package.json holds only `dependencies` and the
+  project's overrides.** 1.x copied the whole project package.json
+  and blanked `scripts`, `devDependencies` and `peerDependencies`;
+  2.0 carries only `overrides` over (npm's `overrides`; pnpm's
+  `"pnpm".overrides` and `pnpm-workspace.yaml` `overrides`), with
+  `$name` references resolved against the project's dependencies.
 - A missing command no longer runs `npm ls`, and a failed npm command
   no longer deletes the cache's package.json.
 

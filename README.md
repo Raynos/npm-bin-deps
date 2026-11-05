@@ -110,7 +110,10 @@ package.json fields
 
 `binDependenciesDir` holds two generated files (three with pnpm):
 
-- `package.json`: `binDependencies` as plain `dependencies`.
+- `package.json`: `binDependencies` as plain `dependencies`, plus
+  your project's overrides: `overrides` with npm; with pnpm,
+  `"pnpm".overrides` and the `overrides` map of your
+  `pnpm-workspace.yaml`.
 - The manager's own lockfile: `package-lock.json` or `pnpm-lock.yaml`.
 - With pnpm, `pnpm-workspace.yaml` carrying your pnpm rules (below).
 
