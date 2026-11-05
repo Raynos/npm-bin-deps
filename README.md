@@ -214,6 +214,10 @@ See [CHANGELOG.md](CHANGELOG.md). In short: the first `npr` run in a
 `~/.config/npm-bin-deps/<name>` to `~/.cache/npm-bin-deps/<hash>`
 (delete the old dir by hand), and Node 20 is the minimum.
 
+2.0 never reads the 1.x cache. Once every project on the machine runs
+2.0, delete `~/.config/npm-bin-deps` (on Windows,
+`%USERPROFILE%\.config\npm-bin-deps`); nothing breaks without it.
+
 ## install
 
 ```sh
