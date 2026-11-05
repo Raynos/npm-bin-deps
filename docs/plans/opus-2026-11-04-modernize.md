@@ -1,10 +1,11 @@
 # Plan: npm-bin-deps 2.0 for greenroom
 
-Status: in progress 2026-11-05: every row is built and ticked on
-master (local commits, unpushed); 71 tests, 70 pass and 1 opt-in
-network test skips, green with the network off. Open, Jake's: review,
-push, watch CI on Linux and Windows (only macOS ran), `npm publish`;
-then the greenroom row below.
+Status: in progress 2026-11-05: every row, the 2026-11-05 review rows
+included, is built and ticked on master (local commits, unpushed); 80
+tests, 79 pass and 1 opt-in network test skips, green with outbound
+network denied (macOS `sandbox-exec`, localhost only); `npm run check`
+clean. Open, Jake's: review, push, watch CI on Linux and Windows (only
+macOS ran), `npm publish`; then the greenroom row below.
 Owner: Jake. Builder: Claude Code (claude-opus-5-5).
 
 ## Why
@@ -39,7 +40,8 @@ install deletes the cache's package.json; no tests.
   1.x. Scripts call tools explicitly: `npr oxlint`. No shims.
 - **Package manager:** one `npr` that detects it: the `packageManager`
   field, then the lockfile beside package.json (`pnpm-lock.yaml` /
-  `package-lock.json`), then `npm_config_user_agent`, then npm. The
+  `package-lock.json`), then a lockfile already in
+  `binDependenciesDir`, then `npm_config_user_agent`, then npm. The
   package.json field `binDependenciesInstaller` overrides (e.g.
   `"socket pnpm"`, `"pnpm"`, `"npm"`).
 - **Lockfile home:** `binDependenciesDir` in package.json (default
@@ -152,15 +154,15 @@ install deletes the cache's package.json; no tests.
 
 ## Rows from the 2026-11-05 review
 
-- [ ] **Overrides carry over.** Done when a test sets an override in
+- [x] **Overrides carry over.** Done when a test sets an override in
   the project and the bin-deps install resolves the overridden
   version (npm and pnpm).
-- [ ] **Dir lockfile detection.** Done when a test with no
+- [x] **Dir lockfile detection.** Done when a test with no
   `packageManager` and no root lockfile keeps pnpm when run under an
   npm user agent because `<dir>/pnpm-lock.yaml` exists.
-- [ ] **Project `.npmrc` applies.** Done when a test points the
+- [x] **Project `.npmrc` applies.** Done when a test points the
   project `.npmrc` registry at the local fixture registry and the
   install uses it, and the token never appears in output or in
   `binDependenciesDir`.
-- [ ] **Pre-push fixes.** LICENSE, SHA-pinned actions, `npr which`
+- [x] **Pre-push fixes.** LICENSE, SHA-pinned actions, `npr which`
   exit 1 (parity test), README cache note.
