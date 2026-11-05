@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.1.0 (2026-11-05)
+
+- **Monorepos.** `npr` now uses the nearest package.json, in or above
+  the current directory, that has `binDependencies`. List the tools
+  once in the root package.json and run `npr` from any workspace
+  package; the tool still runs in that package's directory. A package
+  with its own `binDependencies` keeps using those. Before, `npr` read
+  only the package.json in the current directory.
+
 ## 2.0.0 (2026-11-05)
 
 A rewrite that keeps every 1.x command (`npr <bin>`, `exec`, `which`,

@@ -26,7 +26,7 @@ code never imports; they don't need to sit next to it.
     "typecheck": "npr tsc -p ."
   },
   "devDependencies": {
-    "npm-bin-deps": "2.0.0"
+    "npm-bin-deps": "2.1.0"
   },
   "binDependencies": {
     "oxlint": "1.89.0",
