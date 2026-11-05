@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.0.0 (unreleased)
+## 2.0.0 (2026-11-05)
 
 A rewrite that keeps every 1.x command (`npr <bin>`, `exec`, `which`,
 `ls`, `install`, `rm`, `cache clean`, help, the `npr` / `nbd` /
