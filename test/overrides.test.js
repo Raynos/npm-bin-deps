@@ -147,3 +147,36 @@ test('config: readOverrides per manager, yaml over the pnpm field', () => {
   // The flat map does not leak into the other pnpm settings.
   assert.deepEqual(config.readPnpmSettings(root, {}), { minimumReleaseAge: 1440 })
 })
+
+test('config: catalog: overrides take the catalog version; workspace: ones are dropped', () => {
+  const root = h.makeTmp()
+  fs.writeFileSync(path.join(root, 'pnpm-workspace.yaml'), [
+    'packages:',
+    '  - "packages/*"',
+    'catalog:',
+    '  react: ^18.3.0',
+    'catalogs:',
+    '  default:',
+    '    typescript: =7.0.2 # pinned',
+    '  legacy:',
+    "    '@scope/x': ^1",
+    'overrides:',
+    '  typescript: catalog:default',
+    '  react: "catalog:"',
+    '  "a>@scope/x@<2": catalog:legacy',
+    '  missing: catalog:nope',
+    '  "@my/pkg": workspace:*',
+    'minimumReleaseAge: 1440'
+  ].join('\n'))
+  assert.deepEqual(config.readCatalogs(root), {
+    default: { typescript: '=7.0.2', react: '^18.3.0' },
+    legacy: { '@scope/x': '^1' }
+  })
+  assert.deepEqual(config.readOverrides(root, {}, 'pnpm'), {
+    typescript: '=7.0.2',
+    react: '^18.3.0',
+    'a>@scope/x@<2': '^1',
+    missing: 'catalog:nope'
+  })
+  assert.deepEqual(config.readPnpmSettings(root, {}), { minimumReleaseAge: 1440 })
+})
