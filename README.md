@@ -195,7 +195,8 @@ set it), so `npr oxlint --type-aware` works with no oxlint in
 
 ### `npr which {module}`
 
-`npr which testcafe` prints the location of the binary. Useful when a
+`npr which testcafe` prints the location of the binary, or exits 1
+with nothing on stdout if no bin dependency provides it. Useful when a
 script needs to `cd` first:
 
 ```json

@@ -37,6 +37,9 @@ a content-addressed cache.
 - **`npr cache clean`** removes this project's current install only.
   `npr cache <anything else>` is an error; 1.x ran a bin named
   `cache`.
+- **`npr which <bin>` exits 1** when no bin dependency provides
+  `<bin>`, printing the "these DO exist" listing to stderr and nothing
+  to stdout. 1.x printed a path that did not exist and exited 0.
 - **`npr rm`** takes package names and no longer passes flags to
   `npm rm`.
 - **The generated package.json holds only `dependencies` and the

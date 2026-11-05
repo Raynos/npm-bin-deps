@@ -195,6 +195,19 @@ test('run: installs on first use, then runs the bin', async (t) => {
     assert.deepEqual(h.lastJSONLine(direct.stdout).args, ['direct'])
   })
 
+  await t.test('npr which <missing> exits 1 with nothing on stdout', async () => {
+    const res = await h.npr(box, ['which', 'fx-nope'])
+    assert.equal(res.code, 1, h.dump(res))
+    assert.equal(res.stdout, '')
+    assert.match(res.stderr, /Could not find command: fx-nope/)
+    assert.match(res.stderr, /The following commands DO exist/)
+
+    const bare = await h.npr(box, ['which'])
+    assert.equal(bare.code, 1, h.dump(bare))
+    assert.equal(bare.stdout, '')
+    assert.match(bare.stderr, /usage: npr which/)
+  })
+
   await t.test('npr ls lists the installed bin deps', async () => {
     const res = await h.npr(box, ['ls'])
     assert.equal(res.code, 0, h.dump(res))
