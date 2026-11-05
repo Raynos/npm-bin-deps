@@ -3,7 +3,7 @@
 Status: in progress 2026-11-05: Jake said go; a Claude Code agent
 builds it row by row, commits locally, never pushes or publishes.
 Parity suite written against 1.10.2 first; rows done: lockfile in
-`binDependenciesDir`.
+`binDependenciesDir`, manager detection and installer.
 Owner: Jake. Builder: Claude Code (claude-opus-5-5).
 
 ## Why
@@ -82,7 +82,7 @@ install deletes the cache's package.json; no tests.
   installs from it without changing it. Done when a test commits the
   dir, wipes the cache, and a fresh run installs identical versions
   (lockfile unchanged byte for byte).
-- [ ] **Manager detection and installer.** Detection order above,
+- [x] **Manager detection and installer.** Detection order above,
   `binDependenciesInstaller` override, pnpm rules copied. Done when
   tests cover each detection source, the override, and (pnpm) a
   package newer than `minimumReleaseAge` refused and an unlisted
