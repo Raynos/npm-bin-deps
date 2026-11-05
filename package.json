@@ -1,14 +1,19 @@
 {
   "name": "npm-bin-deps",
-  "version": "1.10.2",
+  "version": "2.0.0",
   "description": "run cli dev deps with npr",
   "main": "index.js",
+  "files": [
+    "index.js",
+    "lib/",
+    "CHANGELOG.md"
+  ],
   "engines": {
     "node": ">=20"
   },
   "scripts": {
     "check": "tsc --noEmit --checkJs -p .",
-    "test": "node --test test/parity.test.js test/lockfile.test.js test/manager.test.js test/cache.test.js test/siblings.test.js test/lock.test.js test/run.test.js test/docs.test.js"
+    "test": "node --test test/parity.test.js test/lockfile.test.js test/manager.test.js test/cache.test.js test/siblings.test.js test/lock.test.js test/run.test.js test/docs.test.js test/release.test.js"
   },
   "bin": {
     "npr": "index.js",

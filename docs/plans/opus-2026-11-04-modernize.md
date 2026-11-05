@@ -1,14 +1,10 @@
 # Plan: npm-bin-deps 2.0 for greenroom
 
-Status: in progress 2026-11-05: Jake said go; a Claude Code agent
-builds it row by row, commits locally, never pushes or publishes.
-Parity suite written against 1.10.2 first; rows done: v1 parity,
-lockfile in `binDependenciesDir`, manager detection and installer,
-content-addressed cache, sibling binaries, built-ins over vendored
-code, types and lint, tests (green under a macOS sandbox with
-outbound network denied), CI (workflow in; its steps pass locally on
-macOS with Node 20.20.2, 22.23.4 and 24.21.0; Linux and Windows
-unrun until Jake pushes), docs.
+Status: in progress 2026-11-05: every row is built and ticked on
+master (local commits, unpushed); 71 tests, 70 pass and 1 opt-in
+network test skips, green with the network off. Open, Jake's: review,
+push, watch CI on Linux and Windows (only macOS ran), `npm publish`;
+then the greenroom row below.
 Owner: Jake. Builder: Claude Code (claude-opus-5-5).
 
 ## Why
@@ -117,7 +113,7 @@ install deletes the cache's package.json; no tests.
   committed dir, the cache, pnpm vs npm), and a CHANGELOG entry
   listing the breaking changes. Done when the README's examples match
   the tests.
-- [ ] **Release prep.** Version 2.0.0 in package.json, `npm pack
+- [x] **Release prep.** Version 2.0.0 in package.json, `npm pack
   --dry-run` lists only the intended files. Push and `npm publish`
   are Jake's.
 
