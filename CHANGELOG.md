@@ -70,6 +70,7 @@ a content-addressed cache.
   dependency.
 - Windows: `.cmd` shims (npm, pnpm, tools) run through `cmd.exe` with
   escaped arguments; current Node refuses to spawn them directly.
+- A `LICENSE` file (MIT) in the repo and the package.
 
 ### Internal
 

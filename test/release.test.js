@@ -1,7 +1,7 @@
 'use strict'
 
-// Row: release prep. The package ships only the cli and its docs, with
-// no runtime dependencies.
+// Row: release prep. The package ships only the cli, its docs and the
+// LICENSE, with no runtime dependencies.
 
 const test = require('node:test')
 const assert = require('node:assert/strict')
@@ -11,7 +11,7 @@ const h = require('./helpers.js')
 
 const REPO = path.join(__dirname, '..')
 
-test('npm pack ships only the cli, lib and docs', async () => {
+test('npm pack ships only the cli, lib, docs and LICENSE', async () => {
   const root = h.makeTmp()
   const env = h.isolatedEnv(root, path.join(root, 'home'), path.join(root, 'cache'))
   const res = await h.run(h.IS_WIN ? 'npm.cmd' : 'npm', ['pack', '--dry-run', '--json'], {
@@ -22,6 +22,7 @@ test('npm pack ships only the cli, lib and docs', async () => {
   const files = info.files.map((/** @type {{ path: string }} */ f) => f.path).sort()
   assert.deepEqual(files, [
     'CHANGELOG.md',
+    'LICENSE',
     'README.md',
     'index.js',
     'lib/bindeps.js',
