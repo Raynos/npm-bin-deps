@@ -107,7 +107,7 @@ same package.json `npr` would run from.
 
 | Field | Meaning |
 | --- | --- |
-| `binDependencies` | The tools, `{ "name": "version" }`, like `dependencies`. |
+| `binDependencies` | The tools, `{ "name": "version" }`, like `dependencies`. A `catalog:` version takes the version from your `pnpm-workspace.yaml` catalogs. |
 | `binDependenciesDir` | Where npr writes the generated `package.json` and lockfile. Default `.bin-deps`. Commit it. |
 | `binDependenciesInstaller` | The install command: `"npm"`, `"pnpm"`, or a wrapper such as `"socket pnpm"`. Default: detected. |
 
@@ -118,7 +118,9 @@ same package.json `npr` would run from.
 - `package.json`: `binDependencies` as plain `dependencies`, plus
   your project's overrides: `overrides` with npm; with pnpm,
   `"pnpm".overrides` and the `overrides` map of your
-  `pnpm-workspace.yaml`.
+  `pnpm-workspace.yaml`. `catalog:` versions, in both
+  `binDependencies` and overrides, are written as the catalog's
+  version; `workspace:` overrides are left out.
 - The manager's own lockfile: `package-lock.json` or `pnpm-lock.yaml`.
 - With pnpm, `pnpm-workspace.yaml` carrying your pnpm rules (below).
 

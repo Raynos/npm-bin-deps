@@ -8,6 +8,11 @@
   package; the tool still runs in that package's directory. A package
   with its own `binDependencies` keeps using those. Before, `npr` read
   only the package.json in the current directory.
+- **Catalogs.** A `binDependencies` version can be `catalog:` or
+  `catalog:<name>`, read from `pnpm-workspace.yaml`, so a tool stays on
+  the same version as the rest of the monorepo. `catalog:` overrides
+  now resolve the same way instead of failing the install, and
+  `workspace:` overrides are left out of the bin-deps install.
 
 ## 2.0.0 (2026-11-05)
 
