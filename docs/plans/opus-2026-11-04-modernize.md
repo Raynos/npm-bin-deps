@@ -5,7 +5,7 @@ builds it row by row, commits locally, never pushes or publishes.
 Parity suite written against 1.10.2 first; rows done: v1 parity,
 lockfile in `binDependenciesDir`, manager detection and installer,
 content-addressed cache, sibling binaries, built-ins over vendored
-code.
+code, types and lint.
 Owner: Jake. Builder: Claude Code (claude-opus-5-5).
 
 ## Why
@@ -101,7 +101,7 @@ install deletes the cache's package.json; no tests.
   `fs.openSync(path, 'wx')` lock with stale detection, and process
   exit handlers. Done when those files are gone and `npm ls --all`
   prints nothing.
-- [ ] **Types and lint.** JSDoc on every function, `tsc --noEmit
+- [x] **Types and lint.** JSDoc on every function, `tsc --noEmit
   --checkJs` clean in strict mode. Done when `npm run check` passes.
 - [ ] **Tests.** `node:test`, temp dirs, offline: fixture packages
   built with `npm pack` and installed from local tarballs (no

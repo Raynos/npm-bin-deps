@@ -151,7 +151,7 @@ test('a holder killed by a signal releases its lock', {
     await new Promise((resolve) => setTimeout(resolve, 20))
   }
   assert.ok(fs.existsSync(lockPath), 'child holds the lock')
-  const exited = new Promise((resolve) => child.on('exit', (code, signal) => resolve(signal)))
+  const exited = new Promise((resolve) => child.on('exit', (_code, signal) => resolve(signal)))
   child.kill('SIGTERM')
   assert.equal(await exited, 'SIGTERM', 'dies of the same signal')
   assert.equal(fs.existsSync(lockPath), false)

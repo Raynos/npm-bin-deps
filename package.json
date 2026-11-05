@@ -4,6 +4,7 @@
   "description": "run cli dev deps with npr",
   "main": "index.js",
   "scripts": {
+    "check": "tsc --noEmit --checkJs -p .",
     "test": "node --test test/parity.test.js test/lockfile.test.js test/manager.test.js test/cache.test.js test/siblings.test.js test/lock.test.js"
   },
   "bin": {
@@ -13,6 +14,8 @@
   },
   "author": "Raynos",
   "license": "MIT",
-  "dependencies": {},
-  "devDependencies": {}
+  "devDependencies": {
+    "@types/node": "20.19.43",
+    "typescript": "7.0.2"
+  }
 }
