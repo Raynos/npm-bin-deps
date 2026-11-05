@@ -5,6 +5,7 @@
 
 const test = require('node:test')
 const assert = require('node:assert/strict')
+const fs = require('node:fs')
 const path = require('node:path')
 
 const h = require('./helpers.js')
@@ -38,9 +39,10 @@ test('npm pack ships only the cli, lib, docs and LICENSE', async () => {
   ])
 })
 
-test('package.json: 2.0.0, Node 20+, three bin names, no runtime deps', () => {
+test('package.json: the top CHANGELOG version, Node 20+, three bin names, no runtime deps', () => {
   const pkg = h.readJSON(path.join(REPO, 'package.json'))
-  assert.equal(pkg.version, '2.0.0')
+  const changelog = fs.readFileSync(path.join(REPO, 'CHANGELOG.md'), 'utf8')
+  assert.equal(pkg.version, (changelog.match(/^## (\S+)/m) || [])[1])
   assert.deepEqual(pkg.engines, { node: '>=20' })
   assert.deepEqual(pkg.bin, { npr: 'index.js', nbd: 'index.js', 'npm-bin-deps': 'index.js' })
   assert.equal(pkg.dependencies, undefined)
