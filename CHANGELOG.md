@@ -23,7 +23,8 @@ a content-addressed cache.
   `%LOCALAPPDATA%` on Windows). npr does not delete the old dirs;
   remove `~/.config/npm-bin-deps` by hand.
 - **pnpm may install instead of npm**, picked from
-  `binDependenciesInstaller`, `packageManager`, the project lockfile or
+  `binDependenciesInstaller`, `packageManager`, the project lockfile,
+  the lockfile already in `binDependenciesDir` or
   `npm_config_user_agent`. With pnpm, its rules apply: install scripts
   run only for `onlyBuiltDependencies`, and `minimumReleaseAge` can
   refuse a version.

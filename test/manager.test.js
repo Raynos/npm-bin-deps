@@ -3,7 +3,8 @@
 // Row: manager detection and installer.
 //
 // Detection order: binDependenciesInstaller, packageManager, the
-// lockfile beside package.json, $npm_config_user_agent, npm. With pnpm
+// lockfile beside package.json, a lockfile already in
+// binDependenciesDir, $npm_config_user_agent, npm. With pnpm
 // the project's minimumReleaseAge, strictDepBuilds,
 // onlyBuiltDependencies and ignoredOptionalDependencies carry over.
 
@@ -15,6 +16,7 @@ const path = require('node:path')
 const h = require('./helpers.js')
 const { startRegistry } = require('./registry.js')
 const config = require('../lib/config.js')
+const managers = require('../lib/manager.js')
 
 const HAS_PNPM = h.hasCommand('pnpm')
 const needsPnpm = { skip: !HAS_PNPM && 'pnpm not found' }
@@ -116,6 +118,67 @@ test('detect: the lockfile beside package.json', needsPnpm, async () => {
     files: { 'package-lock.json': '{}\n' },
     env: { npm_config_user_agent: PNPM_UA }
   }), ['package-lock.json'])
+})
+
+test('detect: a lockfile already in binDependenciesDir keeps its manager', needsPnpm, async () => {
+  // pnpm writes the dir; a later run under `npm run` keeps pnpm.
+  const box = h.makeSandbox()
+  h.writeProject(box, {
+    binDependencies: { 'fx-echo': fx['fx-echo@1.0.0'] },
+    binDependenciesDir: 'tools/bin-deps'
+  })
+  /** @returns {string[]} */
+  const lockfiles = () => ['package-lock.json', 'pnpm-lock.yaml']
+    .filter((f) => fs.existsSync(path.join(box.project, 'tools', 'bin-deps', f)))
+
+  let res = await h.npr(box, ['fx-echo'], { env: { npm_config_user_agent: PNPM_UA } })
+  assert.equal(res.code, 0, h.dump(res))
+  assert.deepEqual(lockfiles(), ['pnpm-lock.yaml'])
+
+  // binDependencies changes so the dir is re-resolved, by pnpm.
+  h.writeProject(box, {
+    binDependencies: { 'fx-echo': fx['fx-echo@2.0.0'] },
+    binDependenciesDir: 'tools/bin-deps'
+  })
+  res = await h.npr(box, ['fx-echo'], { env: { npm_config_user_agent: NPM_UA } })
+  assert.equal(res.code, 0, h.dump(res))
+  assert.equal(h.lastJSONLine(res.stdout).version, '2.0.0')
+  assert.match(res.stderr, /with pnpm \(from tools\/bin-deps\/pnpm-lock\.yaml\)/)
+  assert.deepEqual(lockfiles(), ['pnpm-lock.yaml'])
+  assert.equal(fs.existsSync(path.join(box.project, 'pnpm-lock.yaml')), false)
+
+  // And the other way round: an npm lockfile in the dir beats a pnpm agent.
+  const npmBox = h.makeSandbox()
+  h.writeProject(npmBox, { binDependencies: { 'fx-echo': fx['fx-echo@1.0.0'] } })
+  res = await h.npr(npmBox, ['fx-echo'])
+  assert.equal(res.code, 0, h.dump(res))
+  res = await h.npr(npmBox, ['fx-echo'], { env: { npm_config_user_agent: PNPM_UA } })
+  assert.equal(res.code, 0, h.dump(res))
+  assert.deepEqual(dirLockfiles(npmBox), ['package-lock.json'])
+})
+
+test('detect: the root lockfile beats the one in binDependenciesDir', () => {
+  const root = h.makeTmp()
+  fs.mkdirSync(path.join(root, '.bin-deps'))
+  fs.writeFileSync(path.join(root, '.bin-deps', 'pnpm-lock.yaml'), "lockfileVersion: '9.0'\n")
+  /** @type {import('../lib/project.js').Project} */
+  const project = {
+    root,
+    packageJSONFile: path.join(root, 'package.json'),
+    pkg: {},
+    binDependencies: {},
+    dir: path.join(root, '.bin-deps')
+  }
+  const env = { npm_config_user_agent: NPM_UA }
+  assert.deepEqual(
+    [managers.detectManager(project, env).name, managers.detectManager(project, env).source],
+    ['pnpm', '.bin-deps/pnpm-lock.yaml']
+  )
+  fs.writeFileSync(path.join(root, 'package-lock.json'), '{}\n')
+  assert.deepEqual(
+    [managers.detectManager(project, env).name, managers.detectManager(project, env).source],
+    ['npm', 'package-lock.json']
+  )
 })
 
 test('detect: npm_config_user_agent', needsPnpm, async () => {

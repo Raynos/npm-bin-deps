@@ -146,8 +146,10 @@ npr picks the manager in this order:
 2. `packageManager` in package.json (`pnpm@…` or `npm@…`).
 3. A lockfile beside package.json: `pnpm-lock.yaml` or
    `package-lock.json`.
-4. `npm_config_user_agent`, set by `npm run` / `pnpm run`.
-5. npm.
+4. A lockfile already in `binDependenciesDir`, so the manager that
+   wrote it keeps it.
+5. `npm_config_user_agent`, set by `npm run` / `pnpm run`.
+6. npm.
 
 With **pnpm**, npr copies these settings from your project into the
 committed `pnpm-workspace.yaml`, reading them from your
