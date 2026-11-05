@@ -8,7 +8,7 @@ content-addressed cache, sibling binaries, built-ins over vendored
 code, types and lint, tests (green under a macOS sandbox with
 outbound network denied), CI (workflow in; its steps pass locally on
 macOS with Node 20.20.2, 22.23.4 and 24.21.0; Linux and Windows
-unrun until Jake pushes).
+unrun until Jake pushes), docs.
 Owner: Jake. Builder: Claude Code (claude-opus-5-5).
 
 ## Why
@@ -113,7 +113,7 @@ install deletes the cache's package.json; no tests.
 - [x] **CI.** GitHub Actions matrix: ubuntu, macos, windows; Node 20,
   22, 24; runs check + test. Done when the workflow file is in and
   passes locally where it can (`act` not required).
-- [ ] **Docs.** README rewritten for 2.0 (the new fields, the
+- [x] **Docs.** README rewritten for 2.0 (the new fields, the
   committed dir, the cache, pnpm vs npm), and a CHANGELOG entry
   listing the breaking changes. Done when the README's examples match
   the tests.

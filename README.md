@@ -1,18 +1,57 @@
 # npm-bin-deps
 
-A tool `npr` that allows you to run your CLI dependencies
-without having a copy in `node_modules`.
+`npr` runs your project's CLI dev tools (linters, compilers, test
+runners) without installing them into the project's `node_modules`.
+
+You list the tools under `binDependencies` in package.json. `npr`
+locks them in a small committed dir, installs them into a shared
+cache outside the project, and runs them from there.
 
 ## Goal
 
-The goal of this module is to reduce the number of visible
-dependencies in `node_modules` ; `npm ls` & `package-lock.json`
-that are NOT related to production code.
+Keep `node_modules`, `npm ls` and the project lockfile about the code
+you ship. CLI tools bring hundreds of transitive packages that your
+code never imports; they don't need to sit next to it.
 
-`npm-bin-deps` solves half the problem, look at the sister
-project [`pre-bundled`][pre-bundled] to solve the other half.
+`npm-bin-deps` solves half the problem, look at the sister project
+[`pre-bundled`][pre-bundled] to solve the other half.
 
-## Docs :
+## Example
+
+```json
+{
+  "scripts": {
+    "prepare": "npr install --frozen",
+    "lint": "npr oxlint --type-aware",
+    "typecheck": "npr tsc -p ."
+  },
+  "devDependencies": {
+    "npm-bin-deps": "2.0.0"
+  },
+  "binDependencies": {
+    "oxlint": "1.89.0",
+    "oxlint-tsgolint": "7.0.2004",
+    "typescript": "7.0.2"
+  },
+  "binDependenciesDir": "src/bin-deps"
+}
+```
+
+Add a tool with `npr install`:
+
+```sh
+$ npr install oxfmt
+```
+
+That saves the exact version into `binDependencies`, writes
+`src/bin-deps/package.json` and the lockfile beside it, and installs.
+Commit both files. Then:
+
+```sh
+$ npr oxfmt --check src
+```
+
+## Docs
 
 ```sh
 $ npr --help
@@ -20,7 +59,7 @@ usage: npr [bindep] [...args]
 `npr` will execute your binary dependency
 
 `npr` respects the dependencies listed in "binDependencies" in package.json
-These are command `npr` commands used in various situations:
+These are the `npr` commands used in various situations:
 
 Run a binary command
     npr [bindep]       Run a command; e.g. npr standard or npr tap
@@ -29,9 +68,12 @@ Run a binary command
 Install or remove a binary dependency
     npr install [bindep]  Install a new binary dependency
     npr rm [bindep]       Remove a binary dependency
+    npr install           Update the lockfile from binDependencies and install
+    npr install --frozen  Install exactly what the lockfile says; fail if stale
 
 Clean the cache; if corrupted or broken
-    npr cache clean       Clean the npr install cache.
+    npr cache clean       Clean the npr install cache for this project.
+    npr cache prune       Remove cached installs unused for 30 days.
 
 Inspect existing bin dependencies
     npr which [bindep]  Return the binary location for bindep
@@ -41,218 +83,140 @@ When running `npr`; you can hand-edit "binDependencies" in package.json and
 the `npr exec [bindep]` command will make sure to download the new version
 before executing the binary dependency.
 
+package.json fields
+    binDependencies           The bin deps: { "name": "version" }
+    binDependenciesDir        Where npr writes their package.json and
+                              lockfile; commit it. Default ".bin-deps"
+    binDependenciesInstaller  Install command, e.g. "pnpm" or "socket pnpm".
+                              Default: from "packageManager", then the
+                              lockfile beside package.json, then npm
 ```
 
-## Example
+`npr` reads package.json from the current directory, which is where
+`npm run` and `pnpm run` start scripts.
 
-Add a top level `binDependencies` to your `package.json` that
-has all of the npm cli dependencies.
+`npr`'s own messages go to stderr; a tool's stdout is left alone, so
+`$(npr which tsc)` gives just the path.
 
-Then use `npr ${module}` to execute the cli
+### package.json fields
+
+| Field | Meaning |
+| --- | --- |
+| `binDependencies` | The tools, `{ "name": "version" }`, like `dependencies`. |
+| `binDependenciesDir` | Where npr writes the generated `package.json` and lockfile. Default `.bin-deps`. Commit it. |
+| `binDependenciesInstaller` | The install command: `"npm"`, `"pnpm"`, or a wrapper such as `"socket pnpm"`. Default: detected. |
+
+### The committed dir
+
+`binDependenciesDir` holds two generated files (three with pnpm):
+
+- `package.json`: `binDependencies` as plain `dependencies`.
+- The manager's own lockfile: `package-lock.json` or `pnpm-lock.yaml`.
+- With pnpm, `pnpm-workspace.yaml` carrying your pnpm rules (below).
+
+Commit them. They pin every version, transitive ones included, so a
+fresh clone runs the same tools you did.
+
+When you change `binDependencies` (by hand, `npr install <pkg>` or
+`npr rm <pkg>`), the next `npr` run re-resolves: it updates the
+lockfile, keeping the pins of everything that didn't change.
+`npr install --frozen` never rewrites the dir; it fails if
+`binDependencies` and the dir disagree. Use it in `prepare` and CI.
+
+### The cache
+
+Installs live in `~/.cache/npm-bin-deps/<hash>/`, keyed by a sha256 of
+the committed files. `$XDG_CACHE_HOME` moves it; on Windows it is
+`%LOCALAPPDATA%\npm-bin-deps` unless `XDG_CACHE_HOME` is set.
+
+- Two projects with the same tools share one install; two with
+  different versions get two, and never reinstall over each other.
+- An install is frozen (`npm ci` / `pnpm install --frozen-lockfile`).
+  If a run finds no install for its lockfile, it installs then.
+- Each run stamps the install it used. `npr cache prune` removes
+  installs unused for 30 days. `npr cache clean` removes this
+  project's current install.
+- A lock file per install stops concurrent `npr` runs racing.
+
+### npm or pnpm
+
+npr picks the manager in this order:
+
+1. `binDependenciesInstaller` in package.json.
+2. `packageManager` in package.json (`pnpm@…` or `npm@…`).
+3. A lockfile beside package.json: `pnpm-lock.yaml` or
+   `package-lock.json`.
+4. `npm_config_user_agent`, set by `npm run` / `pnpm run`.
+5. npm.
+
+With **pnpm**, npr copies these settings from your project into the
+committed `pnpm-workspace.yaml`, reading them from your
+`pnpm-workspace.yaml`, the `"pnpm"` field of package.json, or `.npmrc`:
+`minimumReleaseAge`, `minimumReleaseAgeExclude`, `strictDepBuilds`,
+`onlyBuiltDependencies` and `ignoredOptionalDependencies`. So a tool
+newer than your minimum release age is refused, and install scripts
+run only for packages you allowed.
+
+```yaml
+# pnpm-workspace.yaml in your project
+minimumReleaseAge: 1440
+onlyBuiltDependencies:
+  - esbuild
+```
+
+With **npm**, there is no extra guard: npm runs install scripts as it
+normally would.
+
+### Sibling tools
+
+A tool runs with its install's `node_modules/.bin` first on `PATH`, so
+it can call the other bin dependencies. When `oxlint-tsgolint` is a bin
+dependency, `OXLINT_TSGOLINT_PATH` points at its `tsgolint` (unless you
+set it), so `npr oxlint --type-aware` works with no oxlint in
+`node_modules`.
+
+### `npr which {module}`
+
+`npr which testcafe` prints the location of the binary. Useful when a
+script needs to `cd` first:
 
 ```json
 {
-  "devDependencies": {
-    "npm-bin-deps": "1.3.1",
-  },
   "scripts": {
-    "cover": "npr nyc -- node test/index.js && npr nyc report",
-    "lint": "npr tslint -t stylish -p .",
-    "build": "npr tsc --pretty -p ."
-  },
-  "binDependencies": {
-    "dtslint": "2.0.2",
-    "nyc": "13.3.0",
-    "opn": "1.0.1",
-    "tslint": "5.20.1",
-    "tslint-microsoft-contrib": "6.2.0",
-    "type-coverage": "2.0.1",
-    "typescript": "3.7.2"
+    "testcafe": "TESTCAFE=$(npr which testcafe); cd ./tests/testcafe; $TESTCAFE *.ts"
   }
 }
 ```
 
-## Benefits
+## Upgrading from 1.x
 
-Imagine you have a simple typescript project that has some
-binary dependencies for compiling & linting your code.
-
-```json
-{
-  "devDependencies": {
-    "dtslint": "2.0.2",
-    "nyc": "13.3.0",
-    "opn": "1.0.1",
-    "tslint": "5.20.1",
-    "tslint-microsoft-contrib": "6.2.0",
-    "type-coverage": "2.0.1",
-    "typescript": "3.7.2"
-  }
-}
-```
-
-Your project now has a lot of dependencies
-
-```sh
-~/projects/fake-cloudwatch-logs on npr*
-$ npm ls | wc -l
-npm ERR! peer dep missing: typescript@>=2.1.0 || >=2.1.0-dev || >=2.2.0-dev || >=2.3.0-dev || >=2.4.0-dev || >=2.5.0-dev || >=2.6.0-dev || >=2.7.0-dev || >=2.8.0-dev || >=2.9.0-dev || >=3.0.0-dev || >= 3.1.0-dev || >= 3.2.0-dev, required by tslint@5.14.0
-454
-```
-
-```sh
-~/projects/fake-cloudwatch-logs on npr*
-$ ls node_modules
-ajv               combined-stream                find-up                  istanbul-lib-coverage    nice-try          qs                     tslib
-ansi-regex        commander                      forever-agent            istanbul-lib-instrument  npm-bin-deps      querystring            ts-lib-utils
-ansi-styles       command-exists                 form-data                is-typedarray            npm-run-path      request                tslint
-argparse          concat-map                     fs-extra                 jmespath                 number-is-nan     require-directory      tslint-microsoft-contrib
-asn1              core-util-is                   fs.realpath              jsbn                     nyc               require-main-filename  tsutils
-assert-plus       cross-spawn                    get-caller-file          jsesc                    oauth-sign        resolve                tunnel-agent
-asynckit          dashdash                       getpass                  jsonfile                 once              safe-buffer            tweetnacl
-aws4              debug                          get-stream               json-schema              opn               safer-buffer           type-coverage
-aws-sdk           decamelize                     glob                     json-schema-traverse     os-locale         sax                    type-coverage-core
-aws-sign2         definitelytyped-header-parser  globals                  json-stringify-safe      parsimmon         semver                 @types
-@babel            delayed-stream                 graceful-fs              jsprim                   path-exists       set-blocking           typescript
-babel-code-frame  diff                           har-schema               js-tokens                path-is-absolute  shebang-command        universalify
-balanced-match    dts-critic                     har-validator            js-yaml                  path-key          shebang-regex          uri-js
-base64-js         dtslint                        has-ansi                 lcid                     path-parse        signal-exit            url
-bcrypt-pbkdf      ecc-jsbn                       has-flag                 locate-path              p-defer           source-map             uuid
-brace-expansion   end-of-stream                  http-signature           lodash                   performance-now   sprintf-js             verror
-buffer            escape-string-regexp           ieee754                  map-age-cleaner          p-finally         sshpk                  which
-builtin-modules   esprima                        inflight                 mem                      p-is-promise      string-width           which-module
-camelcase         esutils                        inherits                 mime-db                  p-limit           strip-ansi             wrap-ansi
-caseless          events                         invert-kv                mime-types               p-locate          strip-eof              wrappy
-chalk             execa                          isarray                  mimic-fn                 @pre-bundled      strip-json-comments    xml2js
-cliui             extend                         isexe                    minimatch                psl               supports-color         xmlbuilder
-code-point-at     extsprintf                     is-fullwidth-code-point  minimist                 p-try             tape-cluster           y18n
-color-convert     fast-deep-equal                isstream                 mkdirp                   pump              to-fast-properties     yargs
-color-name        fast-json-stable-stringify     is-stream                ms                       punycode          tough-cookie           yargs-parser
-```
-
-```sh
-~/projects/fake-cloudwatch-logs on npr*
-$ cat package-lock.json | wc -l
-2747
-```
-
-By moving all of these packages to `binDependencies`
-
-```json
-{
-  "binDependencies": {
-    "dtslint": "2.0.2",
-    "nyc": "13.3.0",
-    "opn": "1.0.1",
-    "tslint": "5.20.1",
-    "tslint-microsoft-contrib": "6.2.0",
-    "type-coverage": "2.0.1",
-    "typescript": "3.7.2"
-  },
-}
-```
-
-You can remove them all from your local copy.
-
-All of a sudden `npm ls` is readable
-
-```bash
-~/projects/fake-cloudwatch-logs on npr
-$ npm ls
-fake-cloudwatch-logs@1.2.0 /home/raynos/projects/fake-cloudwatch-logs
-├── @pre-bundled/rimraf@3.0.0
-├── @pre-bundled/tape@4.10.2
-├── @types/node@12.0.2
-├─┬ aws-sdk@2.549.0
-│ ├─┬ buffer@4.9.1
-│ │ ├── base64-js@1.3.1
-│ │ ├── ieee754@1.1.13 deduped
-│ │ └── isarray@1.0.0
-│ ├── events@1.1.1
-│ ├── ieee754@1.1.13
-│ ├── jmespath@0.15.0
-│ ├── querystring@0.2.0
-│ ├── sax@1.2.1
-│ ├─┬ url@0.10.3
-│ │ ├── punycode@1.3.2
-│ │ └── querystring@0.2.0 deduped
-│ ├── uuid@3.3.2
-│ └─┬ xml2js@0.4.19
-│   ├── sax@1.2.1 deduped
-│   └── xmlbuilder@9.0.7
-├── npm-bin-deps@1.3.0
-└── tape-cluster@3.2.1
-```
-
-The `package-lock.json` is managable
-
-```
-~/projects/fake-cloudwatch-logs on npr
-$ cat package-lock.json | wc -l
-146
-```
-
-And the amount of dependencies in `node_modules` fits without
-scroll bars in your directory explorer in your text editor
-and on your terminal
-
-```
-~/projects/fake-cloudwatch-logs on npr
-$ ls -l node_modules/
-total 72
-drwxrwxr-x 10 raynos raynos 4096 Dec 19 12:32 aws-sdk
-drwxrwxr-x  2 raynos raynos 4096 Dec 19 12:32 base64-js
-drwxrwxr-x  4 raynos raynos 4096 Dec 19 12:32 buffer
-drwxrwxr-x  3 raynos raynos 4096 Dec 19 12:32 events
-drwxrwxr-x  2 raynos raynos 4096 Dec 19 12:32 ieee754
-drwxrwxr-x  2 raynos raynos 4096 Dec 19 12:32 isarray
-drwxrwxr-x  4 raynos raynos 4096 Dec 19 12:32 jmespath
-drwxrwxr-x  2 raynos raynos 4096 Dec 19 12:32 npm-bin-deps
-drwxrwxr-x  4 raynos raynos 4096 Dec 19 12:34 @pre-bundled
-drwxrwxr-x  2 raynos raynos 4096 Dec 19 12:32 punycode
-drwxrwxr-x  3 raynos raynos 4096 Dec 19 12:32 querystring
-drwxrwxr-x  3 raynos raynos 4096 Dec 19 12:32 sax
-drwxrwxr-x  4 raynos raynos 4096 Dec 19 12:32 tape-cluster
-drwxrwxr-x  3 raynos raynos 4096 Dec 19 12:57 @types
-drwxrwxr-x  2 raynos raynos 4096 Dec 19 12:32 url
-drwxrwxr-x  4 raynos raynos 4096 Dec 19 12:32 uuid
-drwxrwxr-x  3 raynos raynos 4096 Dec 19 12:32 xml2js
-drwxrwxr-x  3 raynos raynos 4096 Dec 19 12:32 xmlbuilder
-```
-
-### Docs how it works
-
-The way this module works is that it installs all your
-`binDependencies` in a temporarly location.
-
-Namely `~/.config/npm-bin-deps/${package.name}`
-It creates a temporary `package.json` where the `dependencies`
-are your `binDependencies` and runs `npm install` in that
-location instead of in your current working directory.
-
-`npr tslint` then just resolves to
-`~/.config/npm-bin-deps/${package.name}/node_modules/.bin/tslint`
-
-### Docs `npr which {module}`
-
-If you want to find the executable name you can run `npr which testcafe`
-for example and it will return the location of the binary.
-
-This is useful if you need to cd for some reason
-
-```json
-{
-  "scripts: {
-    "testcafe": "export TESTCAFE=npr which testcafe; cd ./tests/testcafe; $TESTCAFE *.ts"
-  }
-}
-```
+See [CHANGELOG.md](CHANGELOG.md). In short: the first `npr` run in a
+1.x project writes `.bin-deps/` (commit it), installs move from
+`~/.config/npm-bin-deps/<name>` to `~/.cache/npm-bin-deps/<hash>`
+(delete the old dir by hand), and Node 20 is the minimum.
 
 ## install
 
+```sh
+$ npm install npm-bin-deps --save-dev
 ```
-% npm install npm-bin-deps -g
+
+or globally with `npm install npm-bin-deps -g`. The package installs
+three names for the same command: `npr`, `nbd` and `npm-bin-deps`.
+
+## Development
+
+```sh
+$ npm install
+$ npm run check   # tsc --noEmit --checkJs over the JSDoc types
+$ npm test        # node:test, offline
 ```
+
+The tests build fixture packages with `npm pack` and install them from
+local tarballs, with HOME and the caches in temp dirs. A few tests that
+need version ranges or publish dates use a tiny registry on 127.0.0.1.
+`NPR_TEST_NETWORK=1 npm test` also runs real `oxlint --type-aware` from
+the npm registry.
 
 ## MIT Licensed
 
