@@ -72,6 +72,25 @@ the cache's package.json; no tests.
 - Result: `node_modules` holds the runtime four (hono,
   @hono/node-server, preact, zod) plus about five dev packages.
 
+## Open decisions for Jake (recommendation first)
+
+1. **npm vs pnpm:** one `npr` that detects the manager (the
+   `packageManager` field, then the lockfile beside package.json,
+   then `npm_config_user_agent`, then npm; `binDependenciesInstaller`
+   overrides), or `npr` + `pnpr`, or pnpm only. The bin-deps lockfile
+   uses that manager's own format (`pnpm install --frozen-lockfile` /
+   `npm ci`); the age rule and install-script allow-list are
+   pnpm-only, npm falls back to `--ignore-scripts` and `before`.
+2. **Lockfile home:** a configurable `binDependenciesDir` (default
+   `.bin-deps/`; greenroom uses `src/bin-deps`), a fixed root
+   `.bin-deps/`, or inside the main lockfile.
+3. **Cache:** `~/.cache/npm-bin-deps/<lockfile hash>` with
+   `npr cache prune`, or 1.x's `~/.config/npm-bin-deps`, or pnpm's
+   store.
+4. **When tools download:** on `pnpm install` (a prepare step runs
+   `npr install --frozen`) with lazy install as a fallback, or only
+   lazily on first run (the 2026-11-04 test took 28 s).
+
 ## Decided (Jake, 2026-11-04)
 
 - Lockfile: a pnpm lockfile (`bin-deps.lock.yaml`).
