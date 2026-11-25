@@ -167,7 +167,8 @@ test('detect: the root lockfile beats the one in binDependenciesDir', () => {
     packageJSONFile: path.join(root, 'package.json'),
     pkg: {},
     binDependencies: {},
-    dir: path.join(root, '.bin-deps')
+    dir: path.join(root, '.bin-deps'),
+    projectSettings: true
   }
   const env = { npm_config_user_agent: NPM_UA }
   assert.deepEqual(
@@ -255,15 +256,23 @@ test('switching manager replaces the other lockfile', needsPnpm, async () => {
 
 // --- pnpm rules -----------------------------------------------------
 
-test('pnpm: an install script runs only when onlyBuiltDependencies lists it', needsPnpm, async () => {
+test('pnpm: an install script runs only when onlyBuiltDependencies lists it', needsPnpm, async (t) => {
+  // From a registry: pnpm 10.34 matches no allow list against a file:
+  // tarball's build (only dangerouslyAllowAllBuilds runs it).
+  const reg = await startRegistry()
+  t.after(() => reg.close())
+  const TOOLS = h.STANDARD_FIXTURES.find((spec) => spec.name === 'fx-tools')
+  assert.ok(TOOLS)
+  reg.publish(BUILT, tarball(fx['fx-built@1.0.0']))
+  reg.publish(TOOLS, tarball(fx['fx-tools@1.0.0']))
   const log = path.join(h.makeTmp(), 'installs.log')
-  const box = h.makeSandbox({ FX_INSTALL_LOG: log })
+  const box = h.makeSandbox({ FX_INSTALL_LOG: log, npm_config_registry: reg.url })
   h.writeProject(box, {
     packageManager: 'pnpm@10.33.0',
     pnpm: { onlyBuiltDependencies: ['fx-built'] },
     binDependencies: {
-      'fx-built': fx['fx-built@1.0.0'],
-      'fx-tools': fx['fx-tools@1.0.0']
+      'fx-built': '1.0.0',
+      'fx-tools': '1.0.0'
     }
   })
   let res = await h.npr(box, ['fx-exit', '0'])

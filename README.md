@@ -90,6 +90,9 @@ package.json fields
     binDependenciesInstaller  Install command, e.g. "pnpm" or "socket pnpm".
                               Default: from "packageManager", then the
                               lockfile beside package.json, then npm
+    binDependenciesProjectSettings
+                              false: carry none of the project's
+                              overrides or pnpm settings. Default true
 ```
 
 `npr` uses the nearest package.json, in or above the current directory,
@@ -110,6 +113,7 @@ same package.json `npr` would run from.
 | `binDependencies` | The tools, `{ "name": "version" }`, like `dependencies`. A `catalog:` version takes the version from your `pnpm-workspace.yaml` catalogs. |
 | `binDependenciesDir` | Where npr writes the generated `package.json` and lockfile. Default `.bin-deps`. Commit it. |
 | `binDependenciesInstaller` | The install command: `"npm"`, `"pnpm"`, or a wrapper such as `"socket pnpm"`. Default: detected. |
+| `binDependenciesProjectSettings` | `false` keeps the project's overrides and pnpm settings out of the bin-deps install, so every project with the same tools writes the same files and shares one cached install. Default `true`. |
 
 ### The committed dir
 
@@ -178,6 +182,13 @@ onlyBuiltDependencies:
 
 With **npm**, there is no extra guard: npm runs install scripts as it
 normally would.
+
+Set `"binDependenciesProjectSettings": false` to carry neither these
+settings nor your overrides. The generated files then depend only on
+`binDependencies` and the manager, so projects that list the same tools
+share one install in the cache, whatever their own pnpm settings say.
+Your tools then install without your release-age or build-script
+rules.
 
 ### Registry and auth
 

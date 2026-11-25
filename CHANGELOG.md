@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.2.0 (2026-11-25)
+
+- **`binDependenciesProjectSettings`.** Set it to `false` in package.json
+  and npr carries none of the project's overrides or pnpm settings
+  (`minimumReleaseAge`, `onlyBuiltDependencies` and the rest) into
+  `binDependenciesDir`. Projects that list the same tools then write the
+  same files and share one cached install, even when their own pnpm
+  settings differ. The default, `true`, keeps 2.1's behaviour.
+- Tests: the sandbox keeps the real corepack home, so a corepack pnpm
+  is not re-downloaded through the test registry. The build-script
+  test installs from the test registry: pnpm 10.34 matches no
+  `onlyBuiltDependencies` entry against a `file:` tarball.
+
 ## 2.1.0 (2026-11-05)
 
 - **Monorepos.** `npr` now uses the nearest package.json, in or above

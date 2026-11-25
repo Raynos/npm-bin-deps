@@ -56,7 +56,7 @@ test.after(async () => {
  *
  * @param {Record<string, unknown>} pkg
  * @param {Record<string, string>} [files]
- * @returns {Promise<{ child: string, generated: any }>}
+ * @returns {Promise<{ child: string, generated: any, files: Record<string, string> }>}
  */
 async function childVersion (pkg, files) {
   const box = h.makeSandbox({ npm_config_registry: reg.url })
@@ -66,9 +66,17 @@ async function childVersion (pkg, files) {
   }
   const res = await h.npr(box, ['fx-parent'])
   assert.equal(res.code, 0, h.dump(res))
+  const dir = path.join(box.project, '.bin-deps')
+  /** @type {Record<string, string>} */
+  const generatedFiles = {}
+  for (const name of ['package.json', 'pnpm-workspace.yaml']) {
+    const file = path.join(dir, name)
+    if (fs.existsSync(file)) generatedFiles[name] = fs.readFileSync(file, 'utf8')
+  }
   return {
     child: h.lastJSONLine(res.stdout).child,
-    generated: h.readJSON(path.join(box.project, '.bin-deps', 'package.json'))
+    generated: h.readJSON(path.join(dir, 'package.json')),
+    files: generatedFiles
   }
 }
 
@@ -113,6 +121,47 @@ test('pnpm: pnpm.overrides and pnpm-workspace.yaml overrides reach the install',
   // npm's overrides are not pnpm's.
   const npmOnly = await childVersion({ ...base, overrides: { 'fx-child': '2.0.0' } })
   assert.equal(npmOnly.child, '1.0.0')
+})
+
+test('npm: binDependenciesProjectSettings false carries no overrides', async () => {
+  const off = await childVersion({
+    binDependenciesProjectSettings: false,
+    overrides: { 'fx-child': '2.0.0' }
+  })
+  assert.equal(off.child, '1.0.0')
+  assert.equal(off.generated.overrides, undefined)
+  const plain = await childVersion({})
+  assert.deepEqual(off.files, plain.files, 'the same files as a project with no overrides')
+})
+
+test('pnpm: binDependenciesProjectSettings false writes the same files whatever the project settings', needsPnpm, async () => {
+  const base = { packageManager: 'pnpm@10.33.0', binDependenciesProjectSettings: false }
+  const a = await childVersion({ ...base, pnpm: { overrides: { 'fx-child': '2.0.0' } } }, {
+    'pnpm-workspace.yaml': 'minimumReleaseAge: 0\nignoredOptionalDependencies:\n  - fx-other\n'
+  })
+  const b = await childVersion(base, {
+    'pnpm-workspace.yaml': 'strictDepBuilds: true\noverrides:\n  "fx-child": 2.0.0\n'
+  })
+  assert.equal(a.child, '1.0.0')
+  assert.equal(b.child, '1.0.0')
+  assert.equal(a.generated.pnpm, undefined)
+  assert.deepEqual(Object.keys(a.files).sort(), ['package.json', 'pnpm-workspace.yaml'])
+  assert.deepEqual(a.files, b.files, 'one set of files, so one cache key')
+  assert.doesNotMatch(a.files['pnpm-workspace.yaml'], /minimumReleaseAge|ignoredOptional|strictDepBuilds/)
+
+  // The default still carries them.
+  const on = await childVersion({ packageManager: 'pnpm@10.33.0' }, {
+    'pnpm-workspace.yaml': 'minimumReleaseAge: 0\n'
+  })
+  assert.match(on.files['pnpm-workspace.yaml'], /^minimumReleaseAge: 0$/m)
+})
+
+test('binDependenciesProjectSettings must be a boolean', async () => {
+  const box = h.makeSandbox({ npm_config_registry: reg.url })
+  h.writeProject(box, { binDependencies: { 'fx-parent': '1.0.0' }, binDependenciesProjectSettings: 'no' })
+  const res = await h.npr(box, ['fx-parent'])
+  assert.notEqual(res.code, 0)
+  assert.match(res.stderr, /"binDependenciesProjectSettings" in package.json must be true or false/)
 })
 
 test('config: readOverrides per manager, yaml over the pnpm field', () => {

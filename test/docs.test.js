@@ -24,7 +24,7 @@ function blocks (lang) {
   return Array.from(README.matchAll(re), (m) => m[1])
 }
 
-const FIELDS = ['binDependencies', 'binDependenciesDir', 'binDependenciesInstaller']
+const FIELDS = ['binDependencies', 'binDependenciesDir', 'binDependenciesInstaller', 'binDependenciesProjectSettings']
 
 test('the README help block is `npr --help`, verbatim', async () => {
   const block = blocks('sh').find((b) => b.startsWith('$ npr --help\n'))

@@ -114,6 +114,12 @@ function isolatedEnv (root, home, cacheHome) {
     if (lower === 'oxlint_tsgolint_path') continue
     env[key] = value
   }
+  // A corepack-shimmed pnpm keeps the pnpm it already has: with the
+  // sandbox HOME it would fetch the newest pnpm, through the dead or
+  // fixture registry below.
+  if (env.COREPACK_HOME === undefined) {
+    env.COREPACK_HOME = path.join(process.env.XDG_CACHE_HOME || path.join(os.homedir(), '.cache'), 'node', 'corepack')
+  }
   env.HOME = home
   env.USERPROFILE = home
   env.XDG_CACHE_HOME = cacheHome
@@ -436,6 +442,7 @@ function lastJSONLine (stdout) {
 }
 
 module.exports = {
+  STANDARD_FIXTURES,
   INDEX,
   IS_WIN,
   DEAD_REGISTRY,
